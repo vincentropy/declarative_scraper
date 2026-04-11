@@ -1,0 +1,24 @@
+[project]
+name = "declarative-scraper"
+version = "0.1.0"
+description = "A declarative html scraper for python"
+authors = [
+    { name = "Vincent Lonij", email = "29819815+vincentropy@users.noreply.github.com" },
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "beautifulsoup4 (>=4.14.3,<5.0.0)",
+    "pydantic (>=2.12.5,<3.0.0)",
+    "pyyaml (>=6.0.3,<7.0.0)",
+]
+
+[tool.poetry]
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.20.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
