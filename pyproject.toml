@@ -19,6 +19,7 @@ dependencies = [
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.20.0"
 types-pyyaml = "^6.0.12.20260408"
+pylint = "^4.0.5"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -30,6 +31,7 @@ disable = [
     "missing-class-docstring",
     "missing-function-docstring",
 ]
+max-line-length = 120
 
 [tool.black]
 line-length = 120
