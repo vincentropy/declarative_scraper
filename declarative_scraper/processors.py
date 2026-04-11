@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import re
-from enum import StrEnum
+from enum import Enum
 from typing import Callable, Literal, overload
 
 
-class ProcessorName(StrEnum):
+class ProcessorName(Enum):
     STRIP = "strip"
     TO_INT = "to_int"
     TO_FLOAT = "to_float"
