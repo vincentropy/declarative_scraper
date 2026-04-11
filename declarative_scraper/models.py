@@ -2,11 +2,16 @@
 Pydantic models for the declarative scraper.
 """
 
+from __future__ import annotations
+
+
 import enum
-from typing import TypeVar, Union
+from typing import Tuple, TypeVar, Union
 
 import yaml
 from pydantic import BaseModel, Field
+
+from declarative_scraper.processors import ProcessorName
 
 T = TypeVar("T", bound="BaseModelWithYamlSupport")
 
@@ -28,7 +33,7 @@ class ProcessorSpec(BaseModelWithYamlSupport):
     Can be a simple named processor (e.g. "strip") or a parameterised one, eg a regex.
     """
 
-    name: str
+    name: ProcessorName
     args: list[str] = Field(default_factory=list)
 
 
@@ -38,6 +43,7 @@ class FieldType(enum.Enum):
     TEXT = "text"
     LINK = "link"
     NUMBER = "number"
+    DATE = "date"
 
 
 class FieldSpec(BaseModelWithYamlSupport):
@@ -54,15 +60,13 @@ class FieldSpec(BaseModelWithYamlSupport):
         default=FieldType.TEXT,
         description="Type of field to extract, used to validate extraction.",
     )
-    required: bool = Field(
-        default=True, description="Whether this field is required. Used for validation."
-    )
+    required: bool = Field(default=True, description="Whether this field is required. Used for validation.")
 
     multiple: bool = Field(
         default=False,
         description="Whether to extract multiple values from this field (i.e. return a list).",
     )
-    processors: list[Union[str, dict[str, str]]] = Field(
+    processors: list[Union[ProcessorName, Tuple[ProcessorName, list[str]]]] = Field(
         default_factory=list,
         description="List of processors to apply to the extracted value(s). \
             These are applied in order.",
@@ -77,11 +81,11 @@ class FieldSpec(BaseModelWithYamlSupport):
         """Normalise the mixed-format processor list into ProcessorSpec objects."""
         result: list[ProcessorSpec] = []
         for p in self.processors:
-            if isinstance(p, str):
+            if isinstance(p, ProcessorName):
                 result.append(ProcessorSpec(name=p))
-            elif isinstance(p, dict):
-                for name, arg in p.items():
-                    result.append(ProcessorSpec(name=name, args=[arg]))
+            elif isinstance(p, tuple):
+                name, args = p
+                result.append(ProcessorSpec(name=name, args=args))
         return result
 
 
