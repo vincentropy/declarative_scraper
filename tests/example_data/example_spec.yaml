@@ -1,0 +1,19 @@
+name: example_spec_name
+description: Example spec for testing.
+version: 1
+fields:
+  title:
+    selector: "h1"
+    type: text
+    required: true
+  links:
+    selector: "a"
+    type: link
+    multiple: true
+    fields:
+      text:
+        selector: ".link-text"
+        type: text
+      url:
+        selector: "@href"
+        type: link
