@@ -28,7 +28,7 @@ jobs:
         run: poetry install
 
       - name: Lint
-        run: poetry run pylint declarative_scraper/
+        run: poetry run pylint --fail-on=E declarative_scraper/
 
       - name: Type check
         run: poetry run mypy .
