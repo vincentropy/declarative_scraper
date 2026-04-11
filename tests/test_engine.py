@@ -66,7 +66,7 @@ class TestApplyProcessors(unittest.TestCase):
 
     def test_single_processor(self) -> None:
         processors = [ProcessorSpec(name=ProcessorName.STRIP)]
-        result = ParseEngine._apply_processors("  hello  ", processors)
+        result = ParseEngine.apply_processors("  hello  ", processors)
         self.assertEqual(result, "hello")
 
     def test_chained_processors(self) -> None:
@@ -74,7 +74,7 @@ class TestApplyProcessors(unittest.TestCase):
             ProcessorSpec(name=ProcessorName.STRIP),
             ProcessorSpec(name=ProcessorName.UPPERCASE),
         ]
-        result = ParseEngine._apply_processors("  hello  ", processors)
+        result = ParseEngine.apply_processors("  hello  ", processors)
         self.assertEqual(result, "HELLO")
 
 

@@ -33,7 +33,8 @@ class ParseEngine:
     @staticmethod
     def _extract_field(node: Tag | BeautifulSoup, field_spec: FieldSpec) -> object:
         if field_spec.fields is not None:
-            # if this field has child fields, extraction is slightly different - we ignore ::text / ::attr on the parent selector.
+            # if this field has child fields, extraction is slightly different
+            # we ignore ::text / ::attr on the parent selector.
             return ParseEngine._extract_nested(node, field_spec)
 
         css = field_spec.selector
@@ -41,11 +42,11 @@ class ParseEngine:
         if not values:
             return [] if field_spec.multiple else None
         if field_spec.multiple:
-            return [ParseEngine._apply_processors(v, field_spec.resolved_processors()) for v in values]
+            return [ParseEngine.apply_processors(v, field_spec.resolved_processors()) for v in values]
 
         if len(values) > 1:
             print(f"Warning: Multiple elements matched for single field: {css}. Using first match.")
-        return ParseEngine._apply_processors(values[0], field_spec.resolved_processors())
+        return ParseEngine.apply_processors(values[0], field_spec.resolved_processors())
 
     @staticmethod
     def _extract_nested(node: Tag | BeautifulSoup, field_spec: FieldSpec) -> object:
@@ -107,7 +108,7 @@ class ParseEngine:
         return [str(tag) for tag in tags]
 
     @staticmethod
-    def _apply_processors(value: object, processors: list[ProcessorSpec]) -> object:
+    def apply_processors(value: object, processors: list[ProcessorSpec]) -> object:
         for proc in processors:
             value = apply_processor(proc.name, value, proc.args if proc.args else None)
         return value
