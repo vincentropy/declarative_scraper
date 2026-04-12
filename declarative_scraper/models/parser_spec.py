@@ -8,23 +8,10 @@ from __future__ import annotations
 import enum
 from typing import Tuple, TypeVar, Union
 
-import yaml
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from declarative_scraper.models.yaml import BaseModelWithYamlSupport
 from declarative_scraper.processors import ProcessorName
-
-T = TypeVar("T", bound="BaseModelWithYamlSupport")
-
-
-class BaseModelWithYamlSupport(BaseModel):
-    """BaseModel subclass with support for loading from YAML files."""
-
-    @classmethod
-    def model_validate_yaml(cls: type[T], file_path: str) -> T:
-        """Load a model instance from a YAML file."""
-        with open(file_path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-        return cls.model_validate(data)
 
 
 class ProcessorSpec(BaseModelWithYamlSupport):
