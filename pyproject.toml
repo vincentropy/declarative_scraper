@@ -20,6 +20,7 @@ dependencies = [
 mypy = "^1.20.0"
 types-pyyaml = "^6.0.12.20260408"
 pylint = "^4.0.5"
+pytest = "^9.0.3"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
