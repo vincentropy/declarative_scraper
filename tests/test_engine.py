@@ -89,7 +89,7 @@ class TestParse(unittest.TestCase):
         )
         engine = ParseEngine(spec)
         result = engine.parse("<h1>Hello</h1>")
-        self.assertEqual(result, [{"title": "Hello"}])
+        self.assertEqual(result.data, {"title": "Hello"})
 
     def test_parse_multiple_fields(self) -> None:
         spec = ParseSpec(
@@ -101,7 +101,7 @@ class TestParse(unittest.TestCase):
         )
         engine = ParseEngine(spec)
         result = engine.parse('<h1>Hello</h1><a href="/page">Link</a>')
-        self.assertEqual(result, [{"title": "Hello", "link": "/page"}])
+        self.assertEqual(result.data, {"title": "Hello", "link": "/page"})
 
 
 class TestExtractField(unittest.TestCase):

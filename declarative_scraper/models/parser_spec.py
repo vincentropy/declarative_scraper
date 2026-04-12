@@ -44,6 +44,7 @@ class FieldType(enum.Enum):
     LINK = "link"
     NUMBER = "number"
     DATE = "date"
+    OBJECT = "object"
 
 
 class FieldSpec(BaseModelWithYamlSupport):

@@ -6,7 +6,9 @@ import re
 
 from bs4 import BeautifulSoup, NavigableString, Tag
 
-from .models import FieldSpec, ParseSpec, ProcessorSpec
+from declarative_scraper.models.output import DataValue
+
+from .models import FieldSpec, ParseSpec, ProcessorSpec, EngineOutput
 from .processors import apply_processor
 
 _PSEUDO_RE = re.compile(r"::(text|attr\(([^)]+)\))\s*$")
@@ -18,20 +20,25 @@ class ParseEngine:
     def __init__(self, spec: ParseSpec) -> None:
         self.spec = spec
 
-    def parse(self, html: str) -> list[dict[str, object]]:
-        """Parse HTML string and return a list of extracted item dicts."""
+    def parse(self, html: str) -> EngineOutput:
+        """Parse HTML string and return EngineOutput with typed fields."""
         root = BeautifulSoup(html, "html.parser")
-        return [self._extract_fields(root, self.spec.fields)]
+        fields = self._extract_fields(root, self.spec.fields)
+        # fields is a FieldOutput with .fields as a dict[str, FieldOutput]
+        # EngineOutput expects fields: dict[str, FieldOutput]
+        return EngineOutput(spec=self.spec, data=fields if fields is not None else {})
 
     @staticmethod
-    def _extract_fields(node: Tag | BeautifulSoup, fields: dict[str, FieldSpec]) -> dict[str, object]:
-        result: dict[str, object] = {}
+    def _extract_fields(node: Tag | BeautifulSoup, fields: dict[str, FieldSpec]) -> dict[str, DataValue]:
+        result: dict[str, DataValue] = {}
         for name, field_spec in fields.items():
-            result[name] = ParseEngine._extract_field(node, field_spec)
+            field_out = ParseEngine._extract_field(node, field_spec)
+            if field_out is not None:
+                result[name] = field_out
         return result
 
     @staticmethod
-    def _extract_field(node: Tag | BeautifulSoup, field_spec: FieldSpec) -> object:
+    def _extract_field(node: Tag | BeautifulSoup, field_spec: FieldSpec) -> DataValue | None:
         if field_spec.fields is not None:
             # if this field has child fields, extraction is slightly different
             # we ignore ::text / ::attr on the parent selector.
@@ -42,14 +49,16 @@ class ParseEngine:
         if not values:
             return [] if field_spec.multiple else None
         if field_spec.multiple:
-            return [ParseEngine.apply_processors(v, field_spec.resolved_processors()) for v in values]
+            out_values = [ParseEngine.apply_processors(v, field_spec.resolved_processors()) for v in values]
+            return out_values
 
         if len(values) > 1:
             print(f"Warning: Multiple elements matched for single field: {css}. Using first match.")
-        return ParseEngine.apply_processors(values[0], field_spec.resolved_processors())
+        out_value = ParseEngine.apply_processors(values[0], field_spec.resolved_processors())
+        return out_value
 
     @staticmethod
-    def _extract_nested(node: Tag | BeautifulSoup, field_spec: FieldSpec) -> object:
+    def _extract_nested(node: Tag | BeautifulSoup, field_spec: FieldSpec) -> DataValue | None:
         """Extract a field with child fields, applying child selectors relative to parent elements.
         In this case we ignore ::text / ::attr on the parent selector since it doesn't make sense
         to apply these to a parent element that we're extracting child fields from."""
@@ -61,9 +70,10 @@ class ParseEngine:
             print(f"Warning: Ignoring pseudo-selector {mode} on field with child fields: {css}")
         sub_nodes = node.select(base)
         if not sub_nodes:
-            return [] if field_spec.multiple else None
+            return None
 
         if field_spec.multiple:
+            # Return a list of FieldOutput objects
             return [ParseEngine._extract_fields(sub, field_spec.fields) for sub in sub_nodes]
 
         if len(sub_nodes) > 1:
@@ -108,7 +118,9 @@ class ParseEngine:
         return [str(tag) for tag in tags]
 
     @staticmethod
-    def apply_processors(value: object, processors: list[ProcessorSpec]) -> object:
+    def apply_processors(value: object, processors: list[ProcessorSpec]) -> str | float:
         for proc in processors:
             value = apply_processor(proc.name, value, proc.args if proc.args else None)
-        return value
+        if isinstance(value, (str, float)):
+            return value
+        raise ValueError(f"Unsupported value type after processing: {type(value)}")
