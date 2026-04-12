@@ -4,9 +4,8 @@ Pydantic models for the declarative scraper.
 
 from __future__ import annotations
 
-
 import enum
-from typing import Tuple, TypeVar, Union
+from typing import Tuple, Union
 
 from pydantic import Field
 
