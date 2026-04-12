@@ -1,5 +1,5 @@
 [project]
-name = "declarative-scraper"
+name = "declarative_scraper"
 version = "0.1.0"
 description = "A declarative html scraper for python"
 authors = [
