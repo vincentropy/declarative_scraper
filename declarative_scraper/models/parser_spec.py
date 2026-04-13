@@ -53,10 +53,9 @@ class FieldSpec(BaseModelWithYamlSupport):
         default=False,
         description="Whether to extract multiple values from this field (i.e. return a list).",
     )
-    processors: list[Union[ProcessorName, Tuple[ProcessorName, list[str]]]] = Field(
+    processors: list[Union[ProcessorName, dict[ProcessorName, list[str]]]] = Field(
         default_factory=list,
-        description="List of processors to apply to the extracted value(s). \
-            These are applied in order.",
+        description="List of processors to apply to the extracted value(s). Each processor can be a string (processor name) or a dict mapping processor name to argument list. These are applied in order.",
     )
     fields: dict[str, "FieldSpec"] | None = Field(
         default=None,
@@ -65,14 +64,14 @@ class FieldSpec(BaseModelWithYamlSupport):
     )
 
     def resolved_processors(self) -> list[ProcessorSpec]:
-        """Normalise the mixed-format processor list into ProcessorSpec objects."""
+        """Normalise the processor list into ProcessorSpec objects from dict[func-name=>arg list] or str."""
         result: list[ProcessorSpec] = []
         for p in self.processors:
-            if isinstance(p, ProcessorName):
-                result.append(ProcessorSpec(name=p))
-            elif isinstance(p, tuple):
-                name, args = p
-                result.append(ProcessorSpec(name=name, args=args))
+            if isinstance(p, str):
+                result.append(ProcessorSpec(name=ProcessorName(p)))
+            elif isinstance(p, dict):
+                for name, args in p.items():
+                    result.append(ProcessorSpec(name=ProcessorName(name), args=args))
         return result
 
 

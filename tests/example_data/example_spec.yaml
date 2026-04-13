@@ -6,6 +6,8 @@ fields:
     selector: "h1"
     type: text
     required: true
+    processors:
+      - regex: ["Example (.*)"]
   links:
     selector: "a"
     type: link
