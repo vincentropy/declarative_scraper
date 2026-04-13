@@ -133,6 +133,7 @@ class TestExtractField(unittest.TestCase):
     def test_with_processor(self) -> None:
         node = BeautifulSoup("<p>  hello  </p>", "html.parser")
         field = FieldSpec(selector="p::text", processors=[ProcessorName.STRIP])
+        print(field.resolved_processors())
         result = ParseEngine._extract_field(node, field)
         self.assertEqual(result, "hello")
 
