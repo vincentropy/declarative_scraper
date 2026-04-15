@@ -94,7 +94,7 @@ def select(
 ) -> list[Tag | str] | list[Tag] | list[str]:
     """Select elements using CSS or XPath selector."""
     results: list[Tag | str] | list[Tag] | list[str] = []
-    if selector.startswith("/"):
+    if selector.startswith("/") or selector.startswith("./") or selector.startswith("../"):
         # XPath selector
         root = lxml.etree.fromstring(str(node))
         xpath_results = cast(list[object], root.xpath(selector))
