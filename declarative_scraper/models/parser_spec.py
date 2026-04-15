@@ -5,7 +5,7 @@ Pydantic models for the declarative scraper.
 from __future__ import annotations
 
 import enum
-from typing import Tuple, Union
+from typing import Union
 
 from pydantic import Field
 
@@ -38,7 +38,7 @@ class FieldSpec(BaseModelWithYamlSupport):
 
     selector: str = Field(
         description="""
-            CSS selector for the field.
+            CSS selector or XPATH selector for the field.
             If the fields attribute is not None, this selector should return a parent element or a list of parent elements.
             The selector attribute of the child fields will be applied relative to each parent element.
         """

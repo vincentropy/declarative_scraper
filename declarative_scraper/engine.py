@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 from bs4 import BeautifulSoup, NavigableString, Tag
+import lxml.etree
 
 from declarative_scraper.models.output import DataValue
 
@@ -44,8 +45,7 @@ class ParseEngine:
             # we ignore ::text / ::attr on the parent selector.
             return ParseEngine._extract_nested(node, field_spec)
 
-        css = field_spec.selector
-        values = ParseEngine._select(node, css)
+        values = ParseEngine._select(node, field_spec.selector)
         if not values:
             return [] if field_spec.multiple else None
         if field_spec.multiple:
@@ -53,7 +53,7 @@ class ParseEngine:
             return out_values
 
         if len(values) > 1:
-            print(f"Warning: Multiple elements matched for single field: {css}. Using first match.")
+            print(f"Warning: Multiple elements matched for single field: {field_spec.selector}. Using first match.")
         out_value = ParseEngine.apply_processors(values[0], field_spec.resolved_processors())
         return out_value
 
@@ -64,10 +64,9 @@ class ParseEngine:
         to apply these to a parent element that we're extracting child fields from."""
         assert field_spec.fields is not None
 
-        css = field_spec.selector
-        base, mode = ParseEngine._parse_selector(css)
+        base, mode = ParseEngine._parse_selector(field_spec.selector)
         if mode is not None:
-            print(f"Warning: Ignoring pseudo-selector {mode} on field with child fields: {css}")
+            print(f"Warning: Ignoring pseudo-selector {mode} on field with child fields: {field_spec.selector}")
         sub_nodes = node.select(base)
         if not sub_nodes:
             return None
@@ -77,7 +76,7 @@ class ParseEngine:
             return [ParseEngine._extract_fields(sub, field_spec.fields) for sub in sub_nodes]
 
         if len(sub_nodes) > 1:
-            print(f"Warning: Multiple elements matched for single field: {css}. Using first match.")
+            print(f"Warning: Multiple elements matched for single field: {field_spec.selector}. Using first match.")
         return ParseEngine._extract_fields(sub_nodes[0], field_spec.fields)
 
     @staticmethod
@@ -92,7 +91,7 @@ class ParseEngine:
         return base, f"attr:{m.group(2)}"
 
     @staticmethod
-    def _select(node: Tag | BeautifulSoup, css: str) -> list[str]:
+    def _select_css(node: Tag | BeautifulSoup, css: str) -> list[str]:
         """Run a CSS selector and return matched strings."""
 
         base, mode = ParseEngine._parse_selector(css)
@@ -116,6 +115,25 @@ class ParseEngine:
             return results
 
         return [str(tag) for tag in tags]
+
+    @staticmethod
+    def _select(node: Tag | BeautifulSoup, selector: str) -> list[str]:
+        """Select using either XPATH or CSS selector syntax."""
+
+        try:
+            # Try XPATH first, since it's more powerful and can be used to select attributes without needing ::attr(...)
+            tree = lxml.etree.HTML(str(node))
+            results = tree.xpath(selector)
+            if results:
+                return [str(r) for r in results]
+        except lxml.etree.XPathError:
+            pass
+        # Fall back to CSS selector
+        try:
+            return ParseEngine._select_css(node, selector)
+        except Exception:
+            pass
+        raise ValueError(f"Selector is not valid XPATH or CSS: {selector}")
 
     @staticmethod
     def apply_processors(value: object, processors: list[ProcessorSpec]) -> str | float:

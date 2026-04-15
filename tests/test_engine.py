@@ -61,6 +61,12 @@ class TestParseEngine(unittest.TestCase):
         result = ParseEngine._select(node, "p::text")
         self.assertEqual(result, ["hello "])
 
+    def test_select_xpath_text(self) -> None:
+        html = "<div><p>hello</p><p>world</p></div>"
+        node = BeautifulSoup(html, "html.parser")
+        result = ParseEngine._select(node, "//p/text()")
+        self.assertEqual(result, ["hello", "world"])
+
 
 class TestApplyProcessors(unittest.TestCase):
 
