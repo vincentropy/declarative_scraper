@@ -63,7 +63,7 @@ class ParseEngine:
 
         sub_nodes = select(node, field_spec.selector, assert_tags=True)
         if not sub_nodes:
-            return None
+            return [] if field_spec.multiple else None
 
         if field_spec.multiple:
             # Return a list of FieldOutput objects
