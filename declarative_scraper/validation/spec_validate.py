@@ -1,11 +1,12 @@
+"""
+Validation logic for checking if engine output matches the declared spec."""
+
 from typing import Any, List
 
 from ..models.output import DataValue
 from ..models.parser_spec import FieldSpec, ParseSpec
-from ..models.validation import ValidationMismatch, ValidationResult
+from ..models.validation import SpecValidationResult, ValidationMismatch
 from .validators import _validate_value, type_name
-
-
 
 
 def _expectation_for_field(field_spec: FieldSpec) -> str:
@@ -135,10 +136,10 @@ def _validate_non_nested(name_path: str, field_spec: FieldSpec, value: Any) -> L
     return mismatches
 
 
-def validate_spec_output(spec: ParseSpec, data: dict[str, DataValue]) -> ValidationResult:
+def validate_spec_output(spec: ParseSpec, data: dict[str, DataValue]) -> SpecValidationResult:
     """Validate that the engine output `data` matches the `spec`.
 
-    Returns a `ValidationResult` containing any mismatches found.
+    Returns a `SpecValidationResult` containing any mismatches found.
     """
     mismatches: List[ValidationMismatch] = []
 
@@ -157,4 +158,4 @@ def validate_spec_output(spec: ParseSpec, data: dict[str, DataValue]) -> Validat
         value = data[field_name]
         mismatches.extend(_validate_field_recursive(field_name, field_spec, value))
 
-    return ValidationResult(mismatches=mismatches)
+    return SpecValidationResult(mismatches=mismatches)

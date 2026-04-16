@@ -68,6 +68,18 @@ class TestParseEngine(unittest.TestCase):
         result = select(node, "//p/text()")
         self.assertEqual(result, ["hello", "world"])
 
+    def test_select_xpath_on_full_html_document(self) -> None:
+        """XPath selector must work on a full HTML document (DOCTYPE + html/head/body).
+        lxml.etree.fromstring raises XMLSyntaxError on such input; lxml.html.fromstring handles it."""
+        html = (
+            "<!DOCTYPE html>\n"
+            "<html><head><title>Test</title></head>"
+            "<body><p class=\"target\">found</p></body></html>"
+        )
+        node = BeautifulSoup(html, "html.parser")
+        result = select(node, "//p[@class='target']/text()")
+        self.assertEqual(result, ["found"])
+
 
 class TestApplyProcessors(unittest.TestCase):
 

@@ -1,5 +1,5 @@
-from declarative_scraper.validation.validate import validate_spec_output
-from declarative_scraper.models.parser_spec import ParseSpec, FieldSpec, FieldType
+from declarative_scraper.models.parser_spec import FieldSpec, FieldType, ParseSpec
+from declarative_scraper.validation.spec_validate import validate_spec_output
 
 
 def test_validate_spec_output_simple():
@@ -76,9 +76,7 @@ def test_validate_spec_output_nested_single():
             )
         },
     )
-    data = {
-        "publisher": {"name": "Acme Publishing", "location": "NYC"}
-    }
+    data = {"publisher": {"name": "Acme Publishing", "location": "NYC"}}
     result = validate_spec_output(spec, data)
     assert result.is_valid
 

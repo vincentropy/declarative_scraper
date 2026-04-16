@@ -2,6 +2,7 @@ import re
 from typing import Literal, cast, overload
 
 import lxml.etree
+import lxml.html
 from bs4 import BeautifulSoup, NavigableString, Tag
 
 _PSEUDO_RE = re.compile(r"::(text|attr\(([^)]+)\))\s*$")
@@ -101,7 +102,7 @@ def select(
     results: list[Tag] | list[str] = []
     if selector.startswith("/") or selector.startswith("./") or selector.startswith("../"):
         # XPath selector
-        root = lxml.etree.fromstring(str(node))
+        root = lxml.html.fromstring(str(node))
         xpath_results = cast(list[object], root.xpath(selector))
         str_or_tag = _xpath_results_to_tags(xpath_results)
         results = str_or_tag

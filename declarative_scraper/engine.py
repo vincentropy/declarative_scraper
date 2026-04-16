@@ -1,6 +1,7 @@
 """Core extraction engine that applies a ParseSpec to HTML content."""
 
 from __future__ import annotations
+from typing import cast
 
 from bs4 import BeautifulSoup, Tag
 
@@ -46,7 +47,7 @@ class ParseEngine:
             return [] if field_spec.multiple else None
         if field_spec.multiple:
             out_values = [ParseEngine.apply_processors(v, field_spec.resolved_processors()) for v in values]
-            return out_values
+            return cast(DataValue, out_values)
 
         if len(values) > 1:
             print(f"Warning: Multiple elements matched for single field: {field_spec.selector}. Using first match.")

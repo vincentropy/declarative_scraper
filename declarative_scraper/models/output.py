@@ -1,18 +1,20 @@
 from __future__ import annotations
-from typing import Any, Union
 
-from pydantic import BaseModel
+from typing import TypeAliasType, Union  # pylint: disable=unused-import
+
+from declarative_scraper.models.yaml import BaseModelWithYamlSupport
 
 from .parser_spec import ParseSpec
 
-SingleDataValue = Union[str, float]
-DataValue = Union[SingleDataValue, list[SingleDataValue], dict[str, "DataValue"], list[dict[str, "DataValue"]]]
+DataValue = TypeAliasType(
+    "DataValue",
+    "Union[None, float, str, dict[str, DataValue], list[str], list[float], list[dict[str, DataValue]]]",
+)
 
 
-class EngineOutput(BaseModel):
+class EngineOutput(BaseModelWithYamlSupport):
     """Output from the scraping engine for a single file,
     including the parser spec used and the extracted data."""
 
-    spec: ParseSpec
-    # TODO: introduce stronger typing or validation for this field.
-    data: dict[str, Any]
+    spec: ParseSpec | None = None
+    data: dict[str, DataValue]

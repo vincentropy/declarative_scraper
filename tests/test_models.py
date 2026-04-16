@@ -1,4 +1,5 @@
 import unittest
+
 from declarative_scraper import models
 
 
