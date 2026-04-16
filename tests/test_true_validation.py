@@ -5,18 +5,14 @@ import pytest
 
 from declarative_scraper.models.parser_spec import FieldSpec, FieldType, ParseSpec
 from declarative_scraper.models.validation import FileExpectedItems
-from declarative_scraper.validation.true_validate import (
-    _compare_values,
-    validate_files,
-    validate_spec_against_data,
-)
+from declarative_scraper.validation.true_validate import _compare_values, validate_files, validate_spec_against_data
 
 
 class TestCompareValues:
     def test_matching_string_produces_no_errors(self) -> None:
         errors: list[str] = []
         _compare_values("hello", "hello", "field", errors)
-        assert errors == []
+        assert not errors
 
     def test_mismatched_string_appends_error(self) -> None:
         errors: list[str] = []
@@ -27,12 +23,12 @@ class TestCompareValues:
     def test_empty_string_expected_and_none_actual_is_ok(self) -> None:
         errors: list[str] = []
         _compare_values(None, "", "field", errors)
-        assert errors == []
+        assert not errors
 
     def test_matching_dict_produces_no_errors(self) -> None:
         errors: list[str] = []
         _compare_values({"a": "1"}, {"a": "1"}, "root", errors)
-        assert errors == []
+        assert not errors
 
     def test_non_dict_against_dict_expected_appends_error(self) -> None:
         errors: list[str] = []
@@ -42,7 +38,7 @@ class TestCompareValues:
     def test_matching_list_produces_no_errors(self) -> None:
         errors: list[str] = []
         _compare_values(["a", "b"], ["a", "b"], "root", errors)
-        assert errors == []
+        assert not errors
 
     def test_list_length_mismatch_appends_error(self) -> None:
         errors: list[str] = []
@@ -52,7 +48,7 @@ class TestCompareValues:
     def test_target_field_path_suppresses_unrelated_errors(self) -> None:
         errors: list[str] = []
         _compare_values("wrong", "right", "other_field", errors, target_field_path="target_field")
-        assert errors == []
+        assert not errors
 
     def test_target_field_path_allows_errors_on_matching_path(self) -> None:
         errors: list[str] = []
@@ -191,6 +187,48 @@ class TestValidateSpecAgainstDataNestedXpath:
     def test_raises_for_invalid_nested_field_path(self) -> None:
         with pytest.raises(ValueError, match="does not exist"):
             validate_spec_against_data(self._nested_spec(), NESTED_HTML, field_path="items.nonexistent")
+
+    def test_field_path_without_index_validates_subfield_in_all_list_items(self) -> None:
+        """items.name (no index) should check 'name' in every item in the list.
+        A mismatch in 'name' for any item should be reported; 'price' mismatches
+        should be suppressed."""
+        expected = FileExpectedItems(
+            file="page.html",
+            items={
+                "items": [
+                    {"name": "WRONG", "price": "$99"},  # name wrong, price wrong
+                    {"name": "Beta", "price": "$99"},  # name correct, price wrong
+                ]
+            },
+        )
+        result = validate_spec_against_data(
+            self._nested_spec(), NESTED_HTML, expected=expected.items, field_path="items.name"
+        )
+        # Only the first item's name mismatch should be reported
+        assert not result.passed
+        assert any("name" in e for e in result.errors)
+        # Price mismatches must be suppressed
+        assert not any("price" in e for e in result.errors)
+
+    def test_field_path_with_index_validates_subfield_only_in_that_item(self) -> None:
+        """items.0.name should check 'name' only for the first list item.
+        A name mismatch in the second item must be suppressed."""
+
+        expected = FileExpectedItems(
+            file="page.html",
+            items={
+                "items": [
+                    {"name": "Alpha", "price": "$99"},  # name correct, price wrong
+                    {"name": "WRONG", "price": "$99"},  # name wrong, price wrong
+                ]
+            },
+        )
+        result = validate_spec_against_data(
+            self._nested_spec(), NESTED_HTML, expected=expected.items, field_path="items[0].name"
+        )
+        # First item's name matches → no errors about items[0].name
+        # Second item's name mismatch must be suppressed (outside the focused index)
+        assert result.passed
 
 
 class TestValidateExpectedValues:

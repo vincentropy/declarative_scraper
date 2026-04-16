@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import cast
 
@@ -5,6 +6,32 @@ from declarative_scraper.engine import ParseEngine
 from declarative_scraper.models.output import DataValue
 from declarative_scraper.models.parser_spec import ParseSpec
 from declarative_scraper.models.validation import ExpectedResults, FileValidationResult, TrueValidationResult
+
+
+def _path_matches_target(path: str, target: str | None) -> bool:
+    """Return True if *path* matches *target*, where target may omit list indices.
+
+    `items.name` matches `items[0].name`, `items[1].name`, etc.
+    `items[0].name` matches only `items[0].name`.
+    """
+    if not target:
+        return True
+    target_parts = target.split(".")
+    path_parts = path.split(".")
+    if len(target_parts) != len(path_parts):
+        return False
+    for target_part, path_part in zip(target_parts, path_parts):
+        if "[" in target_part:
+            # Explicit index in target → must match exactly
+            if path_part != target_part:
+                return False
+        else:
+            # No index in target → strip any trailing [N] from path_part before comparing
+            bracket = path_part.find("[")
+            path_base = path_part[:bracket] if bracket != -1 else path_part
+            if path_base != target_part:
+                return False
+    return True
 
 
 def _compare_values(
@@ -18,11 +45,11 @@ def _compare_values(
     if isinstance(expected, str):
         if expected == "" and (actual is None or actual == ""):
             return  # Treat empty string and None as equivalent for convenience
-        if actual != expected and (not target_field_path or path == target_field_path):
+        if actual != expected and _path_matches_target(path, target_field_path):
             errors.append(f"{path}: expected {expected!r}, got {actual!r}")
     elif isinstance(expected, dict):
         if not isinstance(actual, dict):
-            if not target_field_path or path == target_field_path:
+            if _path_matches_target(path, target_field_path):
                 errors.append(f"{path}: expected dict for target field, got {type(actual).__name__}: {actual!r}")
             return
         for key, exp_val in expected.items():
@@ -31,16 +58,16 @@ def _compare_values(
     elif isinstance(expected, list):
         exp_list = cast(list[DataValue], expected)
         if not isinstance(actual, list):
-            if not target_field_path or path == target_field_path:
+            if _path_matches_target(path, target_field_path):
                 errors.append(f"{path}: expected list, got {type(actual).__name__}: {actual!r}")
             return
         if len(actual) != len(expected):
-            if not target_field_path or path == target_field_path:
+            if _path_matches_target(path, target_field_path):
                 errors.append(f"{path}: expected {len(expected)} items, got {len(actual)}")
             return
         for i, (act_item, exp_item) in enumerate(zip(actual, exp_list)):
             _compare_values(act_item, exp_item, f"{path}[{i}]", errors, target_field_path)
-    elif actual != expected and (not target_field_path or path == target_field_path):
+    elif actual != expected and (not target_field_path or _path_matches_target(path, target_field_path)):
         errors.append(f"{path}: expected {expected!r}, got {actual!r}")
 
 
@@ -60,12 +87,13 @@ def validate_spec_against_data(
     if field_path and field_path.startswith("fields."):
         field_path = field_path[len("fields.") :]
     if field_path is not None:
-        # Support dot notation for nested fields
+        # Support dot notation for nested fields; strip any [N] index suffix for spec lookup
         field_parts = field_path.split(".")
         current = spec.fields
         for part in field_parts:
-            if isinstance(current, dict) and part in current:
-                nested_fields = current[part].fields
+            part_name = re.sub(r"\[\d+\]$", "", part)
+            if isinstance(current, dict) and part_name in current:
+                nested_fields = current[part_name].fields
                 current = nested_fields if nested_fields is not None else {}
             else:
                 raise ValueError(f"Field path '{field_path}' does not exist in the spec.")
