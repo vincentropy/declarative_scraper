@@ -49,6 +49,9 @@ class ParseEngine:
             out_values = [ParseEngine.apply_processors(v, field_spec.resolved_processors()) for v in values]
             return cast(DataValue, out_values)
 
+        all_strings = all(isinstance(v, str) for v in values)
+        if all_strings:
+            values = ["".join(cast(list[str], values))]
         if len(values) > 1:
             print(f"Warning: Multiple elements matched for single field: {field_spec.selector}. Using first match.")
         out_value = ParseEngine.apply_processors(values[0], field_spec.resolved_processors())
