@@ -8,7 +8,7 @@ from .parser_spec import ParseSpec
 
 DataValue = TypeAliasType(
     "DataValue",
-    "Union[None, float, str, dict[str, DataValue], list[str], list[float], list[dict[str, DataValue]]]",
+    "Union[None, float, str, dict[str, DataValue], list[DataValue]]",
 )
 
 
