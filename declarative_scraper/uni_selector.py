@@ -7,18 +7,22 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 _PSEUDO_RE = re.compile(r"::(text|attr\(([^)]+)\))\s*$")
 
 
-def _xpath_results_to_tags(results: list[object]) -> list[Tag | str]:
+def _xpath_results_to_tags(results: list[object]) -> list[Tag] | list[str]:
     """Convert lxml XPath results to BeautifulSoup Tags."""
-    tags: list[Tag | str] = []
-    for r in results:
-        if isinstance(r, lxml.etree._Element):  # pylint: disable=protected-access
-            html = lxml.etree.tostring(r, encoding="unicode")
+    tags: list[Tag] | list[str] = []
+    all_elements = all(isinstance(r, lxml.etree._Element) for r in results)  # pylint: disable=protected-access
+    all_strings = all(isinstance(r, str) for r in results)
+    if all_strings:
+        return cast(list[str], results)
+    if all_elements:
+        for r in results:
+            html = lxml.etree.tostring(r, encoding="unicode")  # type: ignore
             soup = BeautifulSoup(html, "html.parser")
             if soup.contents:
                 tags.append(soup.contents[0])  # type: ignore
-        else:
-            tags.append(str(r))
-    return tags
+        return tags
+
+    raise ValueError(f"Expected all XPath results to be either strings or elements, but got: {results}")
 
 
 def _parse_selector(css: str) -> tuple[str, str | None]:
@@ -60,15 +64,16 @@ def _select_css(node: Tag | BeautifulSoup, css: str) -> list[str] | list[Tag]:
 
 @overload
 def select(
-    node: Tag | BeautifulSoup, selector: str, assert_tags: Literal[True], assert_strings: Literal[False] = False
-) -> list[Tag]: ...
+    node: Tag | BeautifulSoup,
+    selector: str,
+) -> list[Tag] | list[str]: ...
 @overload
 def select(
     node: Tag | BeautifulSoup,
     selector: str,
-    assert_tags: Literal[False] = False,
+    assert_tags: Literal[True],
     assert_strings: Literal[False] = False,
-) -> list[Tag | str]: ...
+) -> list[Tag]: ...
 @overload
 def select(
     node: Tag | BeautifulSoup,
@@ -91,9 +96,9 @@ def select(
     assert_tags: bool = False,
     assert_strings: bool = False,
     as_strings: bool = False,
-) -> list[Tag | str] | list[Tag] | list[str]:
+) -> list[Tag] | list[str]:
     """Select elements using CSS or XPath selector."""
-    results: list[Tag | str] | list[Tag] | list[str] = []
+    results: list[Tag] | list[str] = []
     if selector.startswith("/") or selector.startswith("./") or selector.startswith("../"):
         # XPath selector
         root = lxml.etree.fromstring(str(node))
