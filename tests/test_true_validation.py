@@ -96,7 +96,8 @@ class TestValidateSpecAgainstData:
         assert result.item_count == 1
 
 
-NESTED_HTML = """
+class TestValidateSpecAgainstDataNestedXpath:
+    NESTED_HTML = """
 <html>
   <body>
     <div class="item">
@@ -111,8 +112,6 @@ NESTED_HTML = """
 </html>
 """
 
-
-class TestValidateSpecAgainstDataNestedXpath:
     def _nested_spec(self) -> ParseSpec:
         return ParseSpec(
             name="test",
@@ -121,15 +120,15 @@ class TestValidateSpecAgainstDataNestedXpath:
                     selector="//div[@class='item']",
                     multiple=True,
                     fields={
-                        "name": FieldSpec(selector="//span[@class='name']/text()"),
-                        "price": FieldSpec(selector="//span[@class='price']/text()"),
+                        "name": FieldSpec(selector=".//span[@class='name']/text()"),
+                        "price": FieldSpec(selector=".//span[@class='price']/text()"),
                     },
                 )
             },
         )
 
     def test_extracts_nested_fields(self) -> None:
-        result = validate_spec_against_data(self._nested_spec(), NESTED_HTML)
+        result = validate_spec_against_data(self._nested_spec(), self.NESTED_HTML)
         assert result.passed
         assert result.item_count == 1  # top-level dict counts as 1 item
 
@@ -143,7 +142,7 @@ class TestValidateSpecAgainstDataNestedXpath:
                 ]
             },
         )
-        result = validate_spec_against_data(self._nested_spec(), NESTED_HTML, expected=expected.items)
+        result = validate_spec_against_data(self._nested_spec(), self.NESTED_HTML, expected=expected.items)
         assert result.passed
 
     def test_reports_error_on_nested_field_mismatch(self) -> None:
@@ -156,7 +155,7 @@ class TestValidateSpecAgainstDataNestedXpath:
                 ]
             },
         )
-        result = validate_spec_against_data(self._nested_spec(), NESTED_HTML, expected=expected.items)
+        result = validate_spec_against_data(self._nested_spec(), self.NESTED_HTML, expected=expected.items)
         assert not result.passed
         assert any("price" in e for e in result.errors)
 
@@ -165,7 +164,7 @@ class TestValidateSpecAgainstDataNestedXpath:
             file="page.html",
             items={"items": [{"name": "Alpha", "price": "$10"}]},
         )
-        result = validate_spec_against_data(self._nested_spec(), NESTED_HTML, expected=expected.items)
+        result = validate_spec_against_data(self._nested_spec(), self.NESTED_HTML, expected=expected.items)
         assert not result.passed
 
     def test_field_path_targets_nested_child(self) -> None:
@@ -180,13 +179,29 @@ class TestValidateSpecAgainstDataNestedXpath:
             },
         )
         result = validate_spec_against_data(
-            self._nested_spec(), NESTED_HTML, expected=expected.items, field_path="items.name"
+            self._nested_spec(), self.NESTED_HTML, expected=expected.items, field_path="items.name"
         )
         assert result.passed
 
+    def test_field_path_finds_error_for_target_nested_child(self) -> None:
+        # Only the "name" sub-field is validated; price mismatch should be suppressed
+        expected = FileExpectedItems(
+            file="page.html",
+            items={
+                "items": [
+                    {"name": "Alpha", "price": "$99"},
+                    {"name": "Wrong", "price": "$20"},
+                ]
+            },
+        )
+        result = validate_spec_against_data(
+            self._nested_spec(), self.NESTED_HTML, expected=expected.items, field_path="items.name"
+        )
+        assert not result.passed
+
     def test_raises_for_invalid_nested_field_path(self) -> None:
         with pytest.raises(ValueError, match="does not exist"):
-            validate_spec_against_data(self._nested_spec(), NESTED_HTML, field_path="items.nonexistent")
+            validate_spec_against_data(self._nested_spec(), self.NESTED_HTML, field_path="items.nonexistent")
 
     def test_field_path_without_index_validates_subfield_in_all_list_items(self) -> None:
         """items.name (no index) should check 'name' in every item in the list.
@@ -202,7 +217,7 @@ class TestValidateSpecAgainstDataNestedXpath:
             },
         )
         result = validate_spec_against_data(
-            self._nested_spec(), NESTED_HTML, expected=expected.items, field_path="items.name"
+            self._nested_spec(), self.NESTED_HTML, expected=expected.items, field_path="items.name"
         )
         # Only the first item's name mismatch should be reported
         assert not result.passed
@@ -224,11 +239,123 @@ class TestValidateSpecAgainstDataNestedXpath:
             },
         )
         result = validate_spec_against_data(
-            self._nested_spec(), NESTED_HTML, expected=expected.items, field_path="items[0].name"
+            self._nested_spec(), self.NESTED_HTML, expected=expected.items, field_path="items[0].name"
         )
         # First item's name matches → no errors about items[0].name
         # Second item's name mismatch must be suppressed (outside the focused index)
         assert result.passed
+
+
+class TestValidateSpecAgainstDataDoublyNested:
+    HTML = """
+<html><body>
+  <div class="item">
+    <span class="name">Alpha</span>
+    <div class="meta">
+      <span class="color">red</span>
+      <span class="size">L</span>
+    </div>
+  </div>
+  <div class="item">
+    <span class="name">Beta</span>
+    <div class="meta">
+      <span class="color">blue</span>
+      <span class="size">M</span>
+    </div>
+  </div>
+</body></html>
+"""
+
+    HTML_SINGLE_ITEM = """
+<html><body>
+  <div class="item">
+    <span class="name">Alpha</span>
+    <div class="meta">
+      <span class="color">red</span>
+      <span class="size">L</span>
+    </div>
+  </div>
+</body></html>
+"""
+
+    def _spec(self) -> ParseSpec:
+        return ParseSpec(
+            name="test",
+            fields={
+                "items": FieldSpec(
+                    selector="//div[@class='item']",
+                    multiple=True,
+                    fields={
+                        "name": FieldSpec(selector=".//span[@class='name']/text()"),
+                        "meta": FieldSpec(
+                            selector=".//div[@class='meta']",
+                            fields={
+                                "color": FieldSpec(selector=".//span[@class='color']/text()"),
+                                "size": FieldSpec(selector=".//span[@class='size']/text()"),
+                            },
+                        ),
+                    },
+                )
+            },
+        )
+
+    def test_doubly_nested_items_extracted_and_compared(self) -> None:
+        """Each list item contains a sub-field that is itself a nested object."""
+        expected = FileExpectedItems(
+            file="page.html",
+            items={
+                "items": [
+                    {"name": "Alpha", "meta": {"color": "red", "size": "L"}},
+                    {"name": "Beta", "meta": {"color": "blue", "size": "M"}},
+                ]
+            },
+        )
+        result = validate_spec_against_data(self._spec(), self.HTML, expected=expected.items)
+        assert result.passed
+
+    def test_doubly_nested_items_reports_mismatch_in_inner_field(self) -> None:
+        """A mismatch inside the doubly-nested object is detected and reported."""
+        expected = FileExpectedItems(
+            file="page.html",
+            items={
+                "items": [
+                    {"name": "Alpha", "meta": {"color": "red", "size": "XL"}},  # size wrong
+                ]
+            },
+        )
+        result = validate_spec_against_data(self._spec(), self.HTML_SINGLE_ITEM, expected=expected.items)
+        assert not result.passed
+        assert any("size" in e for e in result.errors)
+
+    def test_doubly_nested_items_reports_mismatch_with_target_field_path(self) -> None:
+        """A mismatch inside the doubly-nested object is detected and reported."""
+        expected = FileExpectedItems(
+            file="page.html",
+            items={
+                "items": [
+                    {"name": "Alpha", "meta": {"color": "red", "size": "L"}},
+                    {"name": "Beta", "meta": {"color": "WRONG", "size": "M"}},
+                ]
+            },
+        )
+        result = validate_spec_against_data(self._spec(), self.HTML, expected=expected.items, field_path="items.meta")
+        assert not result.passed
+
+    def test_doubly_nested_items_reports_mismatch_len_with_target_field_path(self) -> None:
+        """A mismatch inside the doubly-nested object is detected and reported."""
+        expected = FileExpectedItems(
+            file="page.html",
+            items={
+                "items": [
+                    {"name": "Alpha", "meta": {"color": "red", "size": "L"}},
+                    {"name": "Beta", "meta": {"color": "blue", "size": "M"}},
+                ]
+            },
+        )
+        result = validate_spec_against_data(
+            self._spec(), self.HTML_SINGLE_ITEM, expected=expected.items, field_path="items.meta"
+        )
+        assert not result.passed
 
 
 class TestValidateExpectedValues:

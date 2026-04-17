@@ -9,24 +9,23 @@ from declarative_scraper.models.validation import ExpectedResults, FileValidatio
 
 
 def _path_matches_target(path: str, target: str | None) -> bool:
-    """Return True if *path* matches *target*, where target may omit list indices.
+    """Return True if *path* matches, is a descendant of, or is an ancestor of *target*.
 
     `items.name` matches `items[0].name`, `items[1].name`, etc.
     `items[0].name` matches only `items[0].name`.
+    `items.meta` matches `items[0].meta.color` (target is ancestor of path).
+    `items` matches `items.meta` (path is ancestor of target — structural errors).
     """
     if not target:
         return True
     target_parts = target.split(".")
     path_parts = path.split(".")
-    if len(target_parts) != len(path_parts):
-        return False
+    # Compare the overlapping prefix
     for target_part, path_part in zip(target_parts, path_parts):
         if "[" in target_part:
-            # Explicit index in target → must match exactly
             if path_part != target_part:
                 return False
         else:
-            # No index in target → strip any trailing [N] from path_part before comparing
             bracket = path_part.find("[")
             path_base = path_part[:bracket] if bracket != -1 else path_part
             if path_base != target_part:

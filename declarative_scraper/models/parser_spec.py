@@ -67,7 +67,7 @@ class FieldSpec(BaseModelWithYamlSupport):
         """Normalise the processor list into ProcessorSpec objects from dict[func-name=>arg list] or str."""
         result: list[ProcessorSpec] = []
         for p in self.processors:
-            if isinstance(p, str) or isinstance(p, ProcessorName):
+            if isinstance(p, (str, ProcessorName)):
                 result.append(ProcessorSpec(name=p))
             elif isinstance(p, dict):
                 for name, args in p.items():

@@ -17,7 +17,7 @@ def _xpath_results_to_tags(results: list[object]) -> list[Tag] | list[str]:
         return cast(list[str], results)
     if all_elements:
         for r in results:
-            html = lxml.etree.tostring(r, encoding="unicode")  # type: ignore
+            html = lxml.html.tostring(r, encoding="unicode")  # type: ignore
             soup = BeautifulSoup(html, "html.parser")
             if soup.contents:
                 tags.append(soup.contents[0])  # type: ignore
