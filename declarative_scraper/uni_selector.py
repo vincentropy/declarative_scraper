@@ -4,12 +4,15 @@ from typing import Literal, cast, overload
 import lxml.etree
 import lxml.html
 from bs4 import BeautifulSoup, NavigableString, Tag
+from soupsieve import SelectorSyntaxError
 
 _PSEUDO_RE = re.compile(r"::(text|attr\(([^)]+)\))\s*$")
 
 
-def _xpath_results_to_tags(results: list[object]) -> list[Tag] | list[str]:
+def _xpath_results_to_tags(results: list[object] | str) -> list[Tag] | list[str]:
     """Convert lxml XPath results to BeautifulSoup Tags."""
+    if isinstance(results, str):
+        return [results]
     tags: list[Tag] | list[str] = []
     all_elements = all(isinstance(r, lxml.etree._Element) for r in results)  # pylint: disable=protected-access
     all_strings = all(isinstance(r, str) for r in results)
@@ -100,16 +103,17 @@ def select(
 ) -> list[Tag] | list[str]:
     """Select elements using CSS or XPath selector."""
     results: list[Tag] | list[str] = []
-    if selector.startswith("/") or selector.startswith("./") or selector.startswith("../"):
-        # XPath selector
-        root = lxml.html.fromstring(str(node))
-        xpath_results = cast(list[object], root.xpath(selector))
-        str_or_tag = _xpath_results_to_tags(xpath_results)
-        results = str_or_tag
-    else:
+    try:
         # CSS selector
         tags = _select_css(node, selector)
         results = tags
+    except SelectorSyntaxError:
+        # XPath selector
+        root = lxml.html.fromstring(str(node))
+        xpath_results = cast(list[object] | str, root.xpath(selector))
+        str_or_tag = _xpath_results_to_tags(xpath_results)
+        results = str_or_tag
+
     all_tags = all(isinstance(r, Tag) for r in results)
     all_strings = all(isinstance(r, str) for r in results)
     if assert_tags and not all_tags:
