@@ -4,8 +4,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_serializer
 
-from declarative_scraper.models.output import DataValue, EngineOutput
-from declarative_scraper.models.yaml import BaseModelWithYamlSupport
+from .output import DataValue, EngineOutput
+from .yaml import BaseModelWithYamlSupport
 
 
 class ValidationMismatch(BaseModel):

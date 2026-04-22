@@ -22,21 +22,21 @@ decs validate spec.yaml expected-results.yaml
 You can write a configuration file with the provided ParserSpec class.
 
 ```python
-import declarative_scraper as ds
+import py_decs
 
-spec = ds.ParserSpec(
+spec = py_decs.ParserSpec(
     name="example_parser",
     description="An example parser for demonstration purposes.",
     items=[
-        ds.FieldSpec(
+        py_decs.FieldSpec(
             name="title",
             selector="h1.title::text",
-            type=ds.FieldType.TEXT,
+            type=py_decs.FieldType.TEXT,
         ),
-        ds.FieldSpec(
+        py_decs.FieldSpec(
             name="links",
             selector="a.link::attr(href)",
-            type=ds.FieldType.LINK,
+            type=py_decs.FieldType.LINK,
             multiple=True,
         )
     ]

@@ -2,7 +2,7 @@ import unittest
 
 from bs4 import BeautifulSoup
 
-from declarative_scraper.uni_selector import _parse_selector, select
+from py_decs.uni_selector import _parse_selector, select
 
 
 class TestSelect(unittest.TestCase):

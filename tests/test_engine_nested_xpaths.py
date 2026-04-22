@@ -1,5 +1,5 @@
-from declarative_scraper.engine import ParseEngine
-from declarative_scraper.models import ParseSpec, FieldSpec
+from py_decs.engine import ParseEngine
+from py_decs.models import ParseSpec, FieldSpec
 
 HTML = """
 <html>

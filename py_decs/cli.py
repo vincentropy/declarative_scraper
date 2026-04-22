@@ -5,12 +5,11 @@ from pathlib import Path
 import click
 import yaml
 
-from declarative_scraper.models.output import EngineOutput
-from declarative_scraper.validation.true_validate import validate_files
-
 from .engine import ParseEngine
+from .models.output import EngineOutput
 from .models.parser_spec import ParseSpec
 from .models.validation import ExpectedResults, FileExpectedItems
+from .validation.true_validate import validate_files
 
 
 @click.group()

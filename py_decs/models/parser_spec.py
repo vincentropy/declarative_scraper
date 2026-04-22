@@ -9,8 +9,8 @@ from typing import Union
 
 from pydantic import Field
 
-from declarative_scraper.models.yaml import BaseModelWithYamlSupport
-from declarative_scraper.processors import ProcessorName
+from .yaml import BaseModelWithYamlSupport
+from ..processors import ProcessorName
 
 
 class ProcessorSpec(BaseModelWithYamlSupport):

@@ -1,6 +1,6 @@
 import unittest
 
-from declarative_scraper import models
+from py_decs import models
 
 
 class TestModels(unittest.TestCase):

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TypeAliasType, Union  # pylint: disable=unused-import
 
-from declarative_scraper.models.yaml import BaseModelWithYamlSupport
+from .yaml import BaseModelWithYamlSupport
 
 from .parser_spec import ParseSpec
 

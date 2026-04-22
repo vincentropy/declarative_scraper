@@ -1,16 +1,16 @@
 """Core extraction engine that applies a ParseSpec to HTML content."""
 
 from __future__ import annotations
+
 from typing import cast
 
 from bs4 import BeautifulSoup, Tag
 
-from declarative_scraper.models.output import DataValue
-from declarative_scraper.validation.spec_validate import validate_spec_output
-
 from .models import EngineOutput, FieldSpec, ParseSpec, ProcessorSpec
+from .models.output import DataValue
 from .processors import apply_processor
 from .uni_selector import select
+from .validation.spec_validate import validate_spec_output
 
 
 class ParseEngine:

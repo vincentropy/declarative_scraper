@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from declarative_scraper.models.parser_spec import FieldSpec, FieldType, ParseSpec
-from declarative_scraper.models.validation import FileExpectedItems
-from declarative_scraper.validation.true_validate import _compare_values, validate_files, validate_spec_against_data
+from py_decs.models.parser_spec import FieldSpec, FieldType, ParseSpec
+from py_decs.models.validation import FileExpectedItems
+from py_decs.validation.true_validate import _compare_values, validate_files, validate_spec_against_data
 
 
 class TestCompareValues:

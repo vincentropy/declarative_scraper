@@ -3,9 +3,9 @@ import unittest
 
 from bs4 import BeautifulSoup
 
-from declarative_scraper.engine import ParseEngine
-from declarative_scraper.models import FieldSpec, ParseSpec, ProcessorSpec
-from declarative_scraper.processors import ProcessorName
+from py_decs.engine import ParseEngine
+from py_decs.models import FieldSpec, ParseSpec, ProcessorSpec
+from py_decs.processors import ProcessorName
 
 
 class TestApplyProcessors(unittest.TestCase):

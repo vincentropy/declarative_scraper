@@ -2,10 +2,10 @@ import re
 from pathlib import Path
 from typing import cast
 
-from declarative_scraper.engine import ParseEngine
-from declarative_scraper.models.output import DataValue
-from declarative_scraper.models.parser_spec import ParseSpec
-from declarative_scraper.models.validation import ExpectedResults, FileValidationResult, TrueValidationResult
+from ..engine import ParseEngine
+from ..models.output import DataValue
+from ..models.parser_spec import ParseSpec
+from ..models.validation import ExpectedResults, FileValidationResult, TrueValidationResult
 
 
 def _path_matches_target(path: str, target: str | None) -> bool:
