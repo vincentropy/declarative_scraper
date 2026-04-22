@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TypeAliasType, Union  # pylint: disable=unused-import
+from typing import Union  # pylint: disable=unused-import
+from typing_extensions import TypeAliasType
 
 from .yaml import BaseModelWithYamlSupport
 
