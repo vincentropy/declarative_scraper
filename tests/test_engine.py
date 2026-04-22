@@ -3,8 +3,7 @@ import unittest
 
 from bs4 import BeautifulSoup
 
-from py_decs.engine import ParseEngine
-from py_decs.models import FieldSpec, ParseSpec, ProcessorSpec
+from py_decs import FieldSpec, ParseEngine, ParseSpec, ProcessorSpec
 from py_decs.processors import ProcessorName
 
 
@@ -118,3 +117,28 @@ class TestExtractNested(unittest.TestCase):
         )
         result = ParseEngine._extract_nested(node, field)
         self.assertIsNone(result)
+
+
+class TestParseAndValidate(unittest.TestCase):
+
+    def test_parse_and_validate_passes(self) -> None:
+        spec = ParseSpec(
+            name="test",
+            fields={
+                "title": FieldSpec(selector="h1::text", required=True),
+            },
+        )
+        engine = ParseEngine(spec)
+        output = engine.parse_and_validate("<h1>Hello</h1>")
+        self.assertEqual(output.data, {"title": "Hello"})
+
+    def test_parse_and_validate_raises_on_invalid(self) -> None:
+        spec = ParseSpec(
+            name="test",
+            fields={
+                "title": FieldSpec(selector="h1::text", required=True),
+            },
+        )
+        engine = ParseEngine(spec)
+        with self.assertRaises(ValueError):
+            engine.parse_and_validate("<div>No title</div>")

@@ -6,11 +6,9 @@ from typing import cast
 
 from bs4 import BeautifulSoup, Tag
 
-from .models import EngineOutput, FieldSpec, ParseSpec, ProcessorSpec
-from .models.output import DataValue
+from .models import EngineOutput, FieldSpec, ParseSpec, ProcessorSpec, DataValue
 from .processors import apply_processor
 from .uni_selector import select
-from .validation.spec_validate import validate_spec_output
 
 
 class ParseEngine:
@@ -30,6 +28,8 @@ class ParseEngine:
     def parse_and_validate(self, html: str) -> EngineOutput:
         """Parse HTML and validate output against spec, returning EngineOutput with validation results.
         Raises ValueError if validation fails."""
+        from .validation.spec_validate import validate_spec_output  # pylint: disable=import-outside-toplevel
+
         output = self.parse(html)
         validate_spec_output(self.spec, output.data, raise_=True)
         return output
