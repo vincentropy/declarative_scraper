@@ -81,6 +81,23 @@ def test_validate_spec_output_nested_single():
     assert result.is_valid
 
 
+def test_validate_spec_output_required_field_missing():
+    spec = ParseSpec(
+        name="TestRequiredMissing",
+        fields={
+            "title": FieldSpec(
+                selector=".title",
+                type=FieldType.TEXT,
+                required=True,
+            )
+        },
+    )
+    data = {}
+    result = validate_spec_output(spec, data)
+    assert not result.is_valid
+    assert any(m.field == "title" and m.actual_type == "missing" for m in result.mismatches)
+
+
 def test_validate_spec_output_malformatted_url():
     spec = ParseSpec(
         name="TestMalformedUrl",
