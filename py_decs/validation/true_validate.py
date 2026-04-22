@@ -70,18 +70,13 @@ def _compare_values(
         errors.append(f"{path}: expected {expected!r}, got {actual!r}")
 
 
-def validate_spec_against_data(
+def validate_spec_against_expected(
     spec: ParseSpec,
     html: str,
-    expected: dict[str, DataValue] | None = None,
+    expected: dict[str, DataValue],
     field_path: str | None = None,
 ) -> FileValidationResult:
-    """Validate a parser spec against an HTML string.
-
-    Parses the HTML using the spec and optionally compares against expected results.
-    """
-    engine = ParseEngine(spec)
-
+    # if field_path is provided, check that it exists in the spec before parsing
     # if field_path starts with "fields.", remove that prefix for easier matching
     if field_path and field_path.startswith("fields."):
         field_path = field_path[len("fields.") :]
@@ -97,17 +92,27 @@ def validate_spec_against_data(
             else:
                 raise ValueError(f"Field path '{field_path}' does not exist in the spec.")
 
+    engine = ParseEngine(spec)
     items = engine.parse(html).data
+    return validate_items_against_expected(items, expected, field_path)
+
+
+def validate_items_against_expected(
+    items: dict[str, DataValue],
+    expected: dict[str, DataValue],
+    field_path: str | None = None,
+) -> FileValidationResult:
+    """Validate a parser spec against an HTML string.
+
+    Parses the HTML using the spec and optionally compares against expected results.
+    """
+
     errors: list[str] = []
 
-    if not items:
-        errors.append("No items extracted")
-
-    if expected:
-        actual = items if items else {}
-        for key, exp_val in expected.items():
-            actual_val = actual.get(key)
-            _compare_values(actual_val, exp_val, key, errors, field_path)
+    actual = items if items else {}
+    for key, exp_val in expected.items():
+        actual_val = actual.get(key)
+        _compare_values(actual_val, exp_val, key, errors, field_path)
 
     return FileValidationResult(file_name="", item_count=len(items), errors=errors)
 
@@ -158,7 +163,16 @@ def validate_files(
     for html_file in html_files:
         html = html_file.read_text(encoding="utf-8")
         file_expected = expected_by_file.get(html_file.name)
-        file_result = validate_spec_against_data(spec, html, file_expected, field_path=field_path)
+        if not file_expected:
+            result.file_results.append(
+                FileValidationResult(
+                    file_name=html_file.name,
+                    item_count=0,
+                    errors=[f"No expected results defined for {html_file.name}"],
+                )
+            )
+            continue
+        file_result = validate_spec_against_expected(spec, html, file_expected, field_path=field_path)
         result.file_results.append(
             FileValidationResult(
                 file_name=html_file.name,
