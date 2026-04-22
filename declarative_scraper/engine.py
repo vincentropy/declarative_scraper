@@ -6,6 +6,7 @@ from typing import cast
 from bs4 import BeautifulSoup, Tag
 
 from declarative_scraper.models.output import DataValue
+from declarative_scraper.validation.spec_validate import validate_spec_output
 
 from .models import EngineOutput, FieldSpec, ParseSpec, ProcessorSpec
 from .processors import apply_processor
@@ -25,6 +26,13 @@ class ParseEngine:
         # fields is a FieldOutput with .fields as a dict[str, FieldOutput]
         # EngineOutput expects fields: dict[str, FieldOutput]
         return EngineOutput(spec=self.spec, data=fields if fields is not None else {})
+
+    def parse_and_validate(self, html: str) -> EngineOutput:
+        """Parse HTML and validate output against spec, returning EngineOutput with validation results.
+        Raises ValueError if validation fails."""
+        output = self.parse(html)
+        validate_spec_output(self.spec, output.data, raise_=True)
+        return output
 
     @staticmethod
     def _extract_fields(node: Tag | BeautifulSoup, fields: dict[str, FieldSpec]) -> dict[str, DataValue]:
