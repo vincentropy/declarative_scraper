@@ -36,7 +36,7 @@ def select_index(value: list[object], idx: str) -> object:
 
 
 PROCESSOR_REGISTRY: dict[ProcessorName, Callable[..., object]] = {
-    ProcessorName.STRIP: lambda value: value.strip(),
+    ProcessorName.STRIP: lambda value: value.strip() if isinstance(value, str) else "",
     ProcessorName.TO_INT: int,
     ProcessorName.TO_FLOAT: float,
     ProcessorName.LOWERCASE: lambda value: value.lower(),
