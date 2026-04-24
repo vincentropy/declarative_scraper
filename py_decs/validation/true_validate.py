@@ -127,6 +127,7 @@ def validate_files(
     spec_file_path: Path,
     data_dir: Path | None = None,
     field_path: str | None = None,
+    skip_unexpected_files: bool = False,
 ) -> TrueValidationResult:
     """Validate an item directory containing parser_spec.yaml and expected.yaml.
 
@@ -169,13 +170,14 @@ def validate_files(
         html = html_file.read_text(encoding="utf-8")
         file_expected = expected_by_file.get(html_file.name)
         if not file_expected:
-            result.file_results.append(
-                FileValidationResult(
-                    file_name=html_file.name,
-                    item_count=0,
-                    errors=[f"No expected results defined for {html_file.name}"],
+            if not skip_unexpected_files
+                result.file_results.append(
+                    FileValidationResult(
+                        file_name=html_file.name,
+                        item_count=0,
+                        errors=[f"No expected results defined for {html_file.name}"],
+                    )
                 )
-            )
             continue
         file_result = validate_spec_against_expected(spec, html, file_expected, field_path=field_path)
         result.file_results.append(
