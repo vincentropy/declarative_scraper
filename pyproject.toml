@@ -1,6 +1,6 @@
 [project]
 name = "py-decs"
-version = "0.5.4"
+version = "0.5.5"
 description = "A declarative html scraper for python"
 authors = [
     { name = "Vincent Lonij", email = "29819815+vincentropy@users.noreply.github.com" },
@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [project.scripts]
-decs = "declarative_scraper.cli:cli"
+decs = "py_decs.cli:cli"
 
 [tool.poetry]
 
