@@ -119,6 +119,105 @@ class TestExtractNested(unittest.TestCase):
         self.assertIsNone(result)
 
 
+class TestParseFieldPath(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.spec = ParseSpec(
+            name="test",
+            fields={
+                "title": FieldSpec(selector="//h1/text()"),
+                "link": FieldSpec(selector="//a/@href"),
+                "person": FieldSpec(
+                    selector="//div[@class='person']",
+                    fields={
+                        "name": FieldSpec(selector="//span[1]/text()"),
+                        "age": FieldSpec(selector="//span[2]/text()"),
+                    },
+                ),
+            },
+        )
+        self.html = (
+            "<h1>Hello</h1>"
+            '<a href="/page">Link</a>'
+            '<div class="person"><span class="name">Alice</span><span class="age">30</span></div>'
+        )
+        self.engine = ParseEngine(self.spec)
+
+    def test_top_level_field(self) -> None:
+        result = self.engine.parse(self.html, field_path="title")
+        self.assertEqual(result.data, {"title": "Hello"})
+
+    def test_top_level_field_excludes_others(self) -> None:
+        result = self.engine.parse(self.html, field_path="link")
+        self.assertNotIn("title", result.data)
+        self.assertEqual(result.data, {"link": "/page"})
+
+    def test_nested_field(self) -> None:
+        result = self.engine.parse(self.html, field_path="person.name")
+        self.assertEqual(result.data, {"person": {"name": "Alice"}})
+
+    def test_nested_field_sibling_excluded(self) -> None:
+        result = self.engine.parse(self.html, field_path="person.age")
+        self.assertNotIn("name", result.data)
+        self.assertEqual(result.data, {"person": {"age": "30"}})
+
+    def test_missing_top_level_field_raises(self) -> None:
+        with self.assertRaises(KeyError):
+            self.engine.parse(self.html, field_path="nonexistent")
+
+    def test_missing_nested_field_raises(self) -> None:
+        with self.assertRaises(KeyError):
+            self.engine.parse(self.html, field_path="person.nonexistent")
+
+    def test_navigate_into_flat_field_raises(self) -> None:
+        with self.assertRaises(KeyError):
+            self.engine.parse(self.html, field_path="title.something")
+
+    def test_no_field_path_returns_all(self) -> None:
+        result = self.engine.parse(self.html)
+        self.assertIn("title", result.data)
+        self.assertIn("link", result.data)
+        self.assertIn("person", result.data)
+
+
+class TestParseFieldPathMultiple(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.spec = ParseSpec(
+            name="test",
+            fields={
+                "connections": FieldSpec(
+                    selector="//div[@class='connection']",
+                    multiple=True,
+                    fields={
+                        "name": FieldSpec(selector="//span[1]/text()"),
+                        "role": FieldSpec(selector="//span[2]/text()"),
+                    },
+                ),
+                "title": FieldSpec(selector="//h1/text()"),
+            },
+        )
+        self.html = (
+            "<h1>Profile</h1>"
+            '<div class="connection"><span class="name">Alice</span><span class="role">Engineer</span></div>'
+            '<div class="connection"><span class="name">Bob</span><span class="role">Manager</span></div>'
+        )
+        self.engine = ParseEngine(self.spec)
+
+    def test_multiple_intermediate_collects_list(self) -> None:
+        result = self.engine.parse(self.html, field_path="connections.name")
+        self.assertEqual(result.data, {"connections": [{"name": "Alice"}, {"name": "Bob"}]})
+
+    def test_multiple_intermediate_other_field(self) -> None:
+        result = self.engine.parse(self.html, field_path="connections.role")
+        self.assertEqual(result.data, {"connections": [{"role": "Engineer"}, {"role": "Manager"}]})
+
+    def test_multiple_intermediate_excludes_sibling_top_fields(self) -> None:
+        result = self.engine.parse(self.html, field_path="connections.name")
+        self.assertNotIn("title", result.data)
+        self.assertNotIn("role", result.data)
+
+
 class TestParseAndValidate(unittest.TestCase):
 
     def test_parse_and_validate_passes(self) -> None:

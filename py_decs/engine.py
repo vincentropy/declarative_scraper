@@ -17,22 +17,73 @@ class ParseEngine:
     def __init__(self, spec: ParseSpec) -> None:
         self.spec = spec
 
-    def parse(self, html: str) -> EngineOutput:
-        """Parse HTML string and return EngineOutput with typed fields."""
-        root = BeautifulSoup(html, "html.parser")
-        fields = self._extract_fields(root, self.spec.fields)
-        # fields is a FieldOutput with .fields as a dict[str, FieldOutput]
-        # EngineOutput expects fields: dict[str, FieldOutput]
-        return EngineOutput(spec=self.spec, data=fields if fields is not None else {})
+    def parse(self, html: str, field_path: str | None = None) -> EngineOutput:
+        """Parse HTML string and return EngineOutput with typed fields.
 
-    def parse_and_validate(self, html: str) -> EngineOutput:
+        Args:
+            html: Raw HTML content to parse.
+            field_path: Optional dot-separated path (e.g. ``"person.name"``) to
+                extract only a single field instead of the full spec.  Each
+                segment must match a key in the ``fields`` dict at that level of
+                nesting.  Raises ``KeyError`` if a segment is not found or if a
+                non-leaf segment has no child fields.
+        """
+        root = BeautifulSoup(html, "html.parser")
+        if field_path is not None:
+            data = self._extract_field_path(root, self.spec.fields, field_path.split("."))
+        else:
+            data = self._extract_fields(root, self.spec.fields)
+        return EngineOutput(spec=self.spec, data=data if data is not None else {})
+
+    def parse_and_validate(self, html: str, field_path: str | None = None) -> EngineOutput:
         """Parse HTML and validate output against spec, returning EngineOutput with validation results.
         Raises ValueError if validation fails."""
         from .validation.spec_validate import validate_spec_output  # pylint: disable=import-outside-toplevel
 
-        output = self.parse(html)
+        output = self.parse(html, field_path=field_path)
         validate_spec_output(self.spec, output.data, raise_=True)
         return output
+
+    @staticmethod
+    def _extract_field_path(
+        node: Tag | BeautifulSoup,
+        fields: dict[str, FieldSpec],
+        path: list[str],
+    ) -> dict[str, DataValue]:
+        """Navigate ``fields`` and the HTML tree simultaneously following ``path``.
+
+        Returns a ``{leaf_name: value}`` dict containing only the targeted field.
+        Raises ``KeyError`` if any path segment is missing or if a non-leaf
+        segment has no child ``fields``.
+        """
+        name, *rest = path
+        if name not in fields:
+            raise KeyError(f"Field {name!r} not found. Available: {list(fields.keys())}")
+        field_spec = fields[name]
+
+        if not rest:
+            # Leaf — extract just this field
+            value = ParseEngine._extract_field(node, field_spec)
+            return {name: value} if value is not None else {}
+
+        # Intermediate — must have child fields and a navigable selector
+        if field_spec.fields is None:
+            raise KeyError(
+                f"Field {name!r} has no child fields; cannot navigate to {'.'.join(rest)!r}"
+            )
+        sub_nodes = select(node, field_spec.selector, assert_tags=True)
+        if not sub_nodes:
+            return {}
+
+        if field_spec.multiple:
+            items = [
+                ParseEngine._extract_field_path(sub, field_spec.fields, rest)
+                for sub in sub_nodes
+            ]
+            return cast(dict[str, DataValue], {name: cast(DataValue, items)})
+
+        inner = ParseEngine._extract_field_path(sub_nodes[0], field_spec.fields, rest)
+        return cast(dict[str, DataValue], {name: cast(DataValue, inner)})
 
     @staticmethod
     def _extract_fields(node: Tag | BeautifulSoup, fields: dict[str, FieldSpec]) -> dict[str, DataValue]:
