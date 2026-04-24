@@ -41,7 +41,12 @@ def _compare_values(
     target_field_path: str | None = None,
 ) -> None:
     """Recursively compare an actual parsed value against an expected value."""
-    if isinstance(expected, str):
+    if expected is None:
+        if not actual and _path_matches_target(path, target_field_path):
+            return  # Treat None, empty string, empty list, and empty dict as equivalent for convenience
+        if actual and _path_matches_target(path, target_field_path):
+            errors.append(f"{path}: expected None/empty, got {actual!r}")
+    elif isinstance(expected, str):
         if expected == "" and (actual is None or actual == ""):
             return  # Treat empty string and None as equivalent for convenience
         if actual != expected and _path_matches_target(path, target_field_path):
