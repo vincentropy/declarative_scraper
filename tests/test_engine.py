@@ -161,6 +161,11 @@ class TestParseFieldPath(unittest.TestCase):
         self.assertNotIn("name", result.data)
         self.assertEqual(result.data, {"person": {"age": "30"}})
 
+    def test_nested_field_children_included(self) -> None:
+        result = self.engine.parse(self.html, field_path="person")
+        self.assertNotIn("name", result.data)
+        self.assertEqual(result.data, {"person": {"age": "30", "name": "Alice"}})
+
     def test_missing_top_level_field_raises(self) -> None:
         with self.assertRaises(KeyError):
             self.engine.parse(self.html, field_path="nonexistent")
