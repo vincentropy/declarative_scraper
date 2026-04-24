@@ -170,7 +170,7 @@ def validate_files(
         html = html_file.read_text(encoding="utf-8")
         file_expected = expected_by_file.get(html_file.name)
         if not file_expected:
-            if not skip_unexpected_files
+            if not skip_unexpected_files:
                 result.file_results.append(
                     FileValidationResult(
                         file_name=html_file.name,
