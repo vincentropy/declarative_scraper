@@ -85,7 +85,9 @@ class ParseEngine:
         return ParseEngine._extract_fields(sub_nodes[0], field_spec.fields)
 
     @staticmethod
-    def apply_processors(value: object, processors: list[ProcessorSpec]) -> str | float:
+    def apply_processors(value: object, processors: list[ProcessorSpec]) -> str | float | None:
+        if value is None:
+            return value
         for proc in processors:
             value = apply_processor(proc.name, value, proc.args if proc.args else None)
         if isinstance(value, (str, float)):
