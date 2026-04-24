@@ -107,7 +107,7 @@ def select(
         # CSS selector
         tags = _select_css(node, selector)
         results = tags
-    except SelectorSyntaxError:
+    except (SelectorSyntaxError, NotImplementedError):
         # XPath selector
         root = lxml.html.fromstring(str(node))
         xpath_results = cast(list[object] | str, root.xpath(selector))
