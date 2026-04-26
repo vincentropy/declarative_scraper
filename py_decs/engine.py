@@ -6,6 +6,8 @@ from typing import cast
 
 from bs4 import BeautifulSoup, Tag
 
+from py_decs.models.validation import SpecValidationResult
+
 from .models import EngineOutput, FieldSpec, ParseSpec, ProcessorSpec, DataValue
 from .processors import apply_processor
 from .uni_selector import select
@@ -35,13 +37,22 @@ class ParseEngine:
             data = self._extract_fields(root, self.spec.fields)
         return EngineOutput(spec=self.spec, data=data if data is not None else {})
 
-    def parse_and_validate(self, html: str, field_path: str | None = None) -> EngineOutput:
-        """Parse HTML and validate output against spec, returning EngineOutput with validation results.
-        Raises ValueError if validation fails."""
+    def validate(self, html: str, field_path: str | None = None) -> SpecValidationResult:
+        """Validate HTML against spec, returning SpecValidationResult with details."""
         from .validation.spec_validate import validate_spec_output  # pylint: disable=import-outside-toplevel
 
         output = self.parse(html, field_path=field_path)
-        validate_spec_output(self.spec, output.data, raise_=True)
+        validation_result = validate_spec_output(self.spec, output.data, raise_=False)
+        return validation_result
+
+    def parse_and_validate(self, html: str, field_path: str | None = None) -> EngineOutput:
+        """Parse HTML and validate output against spec, returning EngineOutput with validation results.
+        Raises ValueError if validation fails."""
+
+        output = self.parse(html, field_path=field_path)
+        validation_result = self.validate(html, field_path=field_path)
+        if not validation_result.is_valid:
+            raise ValueError(f"Validation failed: {validation_result.mismatches[0]}")
         return output
 
     @staticmethod
@@ -68,18 +79,13 @@ class ParseEngine:
 
         # Intermediate — must have child fields and a navigable selector
         if field_spec.fields is None:
-            raise KeyError(
-                f"Field {name!r} has no child fields; cannot navigate to {'.'.join(rest)!r}"
-            )
+            raise KeyError(f"Field {name!r} has no child fields; cannot navigate to {'.'.join(rest)!r}")
         sub_nodes = select(node, field_spec.selector, assert_tags=True)
         if not sub_nodes:
             return {}
 
         if field_spec.multiple:
-            items = [
-                ParseEngine._extract_field_path(sub, field_spec.fields, rest)
-                for sub in sub_nodes
-            ]
+            items = [ParseEngine._extract_field_path(sub, field_spec.fields, rest) for sub in sub_nodes]
             return cast(dict[str, DataValue], {name: cast(DataValue, items)})
 
         inner = ParseEngine._extract_field_path(sub_nodes[0], field_spec.fields, rest)
