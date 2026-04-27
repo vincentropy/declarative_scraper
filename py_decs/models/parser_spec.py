@@ -20,7 +20,7 @@ class ProcessorSpec(BaseModelWithYamlSupport):
     """
 
     name: ProcessorName
-    args: list[str] = Field(default_factory=list)
+    args: list[Union[str, int]] = Field(default_factory=list)
 
 
 class FieldType(enum.Enum):
@@ -53,7 +53,7 @@ class FieldSpec(BaseModelWithYamlSupport):
         default=False,
         description="Whether to extract multiple values from this field (i.e. return a list).",
     )
-    processors: list[Union[ProcessorName, dict[ProcessorName, list[str]]]] = Field(
+    processors: list[Union[ProcessorName, dict[ProcessorName, list[Union[str, int]]]]] = Field(
         default_factory=list,
         description="List of processors to apply to the extracted value(s). Each processor can be a string (processor name) or a dict mapping processor name to argument list. These are applied in order.",
     )

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from enum import Enum
-from typing import Callable, Literal, overload
+from typing import Callable, Literal, Union, overload
 
 
 class ProcessorName(Enum):
@@ -72,13 +72,15 @@ def apply_processor(name: Literal[ProcessorName.REPLACE], value: str, args: list
 def apply_processor(
     name: Literal[ProcessorName.INDEX],
     value: list[object],
-    args: list[str],
+    args: list[Union[str, int]],
 ) -> object: ...
 @overload
-def apply_processor(name: ProcessorName, value: object, args: list[str] | None = None) -> object: ...
+def apply_processor(name: ProcessorName, value: object, args: list[Union[str, int]] | None = None) -> object: ...
 
 
-def apply_processor(name: ProcessorName, value: object, args: list[str] | None = None) -> object:
+def apply_processor(
+    name: ProcessorName, value: object, args: list[Union[str, int]] | list[str] | None = None
+) -> object:
     """Apply a named processor to a value.
 
     Raises KeyError if the processor name is not registered.

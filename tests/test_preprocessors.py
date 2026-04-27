@@ -36,8 +36,11 @@ class TestProcessors(unittest.TestCase):
     def test_split(self) -> None:
         self.assertEqual(apply_processor(ProcessorName.SPLIT, "a,b,c", [","]), ["a", "b", "c"])
 
-    def test_index(self) -> None:
+    def test_index_with_str(self) -> None:
         self.assertEqual(apply_processor(ProcessorName.INDEX, [10, 20, 30], ["1"]), 20)
+
+    def test_index_with_int(self) -> None:
+        self.assertEqual(apply_processor(ProcessorName.INDEX, [10, 20, 30], [1]), 20)
 
     def test_replace(self) -> None:
         self.assertEqual(apply_processor(ProcessorName.REPLACE, "hello world", ["world", "Python"]), "hello Python")
