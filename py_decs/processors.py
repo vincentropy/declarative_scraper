@@ -17,6 +17,7 @@ class ProcessorName(Enum):
     REGEX = "regex"
     SPLIT = "split"
     INDEX = "index"
+    REPLACE = "replace"
 
 
 def regex_extract(value: str, pattern: str) -> str:
@@ -45,6 +46,7 @@ PROCESSOR_REGISTRY: dict[ProcessorName, Callable[..., object]] = {
     ProcessorName.REGEX: regex_extract,
     ProcessorName.SPLIT: split_string,
     ProcessorName.INDEX: select_index,
+    ProcessorName.REPLACE: lambda value, old, new: value.replace(old, new) if isinstance(value, str) else value,
 }
 
 
@@ -61,9 +63,11 @@ def apply_processor(name: Literal[ProcessorName.UPPERCASE], value: str) -> str: 
 @overload
 def apply_processor(name: Literal[ProcessorName.JOIN], value: list[str], args: list[str] | None = None) -> str: ...
 @overload
-def apply_processor(name: Literal[ProcessorName.REGEX], value: str, args: list[str] | None = None) -> str: ...
+def apply_processor(name: Literal[ProcessorName.REGEX], value: str, args: list[str]) -> str: ...
 @overload
 def apply_processor(name: Literal[ProcessorName.SPLIT], value: str, args: list[str] | None = None) -> list[str]: ...
+@overload
+def apply_processor(name: Literal[ProcessorName.REPLACE], value: str, args: list[str]) -> str: ...
 @overload
 def apply_processor(
     name: Literal[ProcessorName.INDEX],

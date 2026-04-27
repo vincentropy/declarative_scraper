@@ -39,6 +39,15 @@ class TestProcessors(unittest.TestCase):
     def test_index(self) -> None:
         self.assertEqual(apply_processor(ProcessorName.INDEX, [10, 20, 30], ["1"]), 20)
 
+    def test_replace(self) -> None:
+        self.assertEqual(apply_processor(ProcessorName.REPLACE, "hello world", ["world", "Python"]), "hello Python")
+
+    def test_replace_no_match(self) -> None:
+        self.assertEqual(apply_processor(ProcessorName.REPLACE, "hello world", ["xyz", "Python"]), "hello world")
+
+    def test_replace_non_string(self) -> None:
+        self.assertEqual(apply_processor(ProcessorName.REPLACE, 42, ["4", "5"]), 42)
+
     def test_unknown_processor(self) -> None:
         with self.assertRaises(ValueError):
             apply_processor("nonexistent", "value")  # type: ignore
