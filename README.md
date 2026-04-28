@@ -27,7 +27,7 @@ import py_decs
 spec = py_decs.ParserSpec(
     name="example_parser",
     description="An example parser for demonstration purposes.",
-    items=[
+    fields=[
         py_decs.FieldSpec(
             name="title",
             selector="h1.title::text",
@@ -39,6 +39,23 @@ spec = py_decs.ParserSpec(
             type=py_decs.FieldType.LINK,
             multiple=True,
         )
+        py_decs.FieldSpec(
+            name="author",
+            selector="div.author",
+            type=py_decs.FieldType.OBJECT,
+            fields=[
+                py_decs.FieldSpec(
+                    name="name",
+                    selector="span.name::text",
+                    type=py_decs.FieldType.TEXT,
+                ),
+                py_decs.FieldSpec(
+                    name="profile_url",
+                    selector="a.profile::attr(href)",
+                    type=py_decs.FieldType.LINK,
+                ),
+            ]
+        ),
     ]
 )
 ```
