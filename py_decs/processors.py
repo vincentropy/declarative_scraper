@@ -33,7 +33,8 @@ def split_string(value: str, separator: str = " ") -> list[str]:
 
 def select_index(value: list[object], idx: str) -> object:
     """Select an element from a list by index."""
-    return value[int(idx)]
+    int_idx = int(idx)
+    return value[int_idx] if 0 <= int_idx < len(value) else None
 
 
 PROCESSOR_REGISTRY: dict[ProcessorName, Callable[..., object]] = {

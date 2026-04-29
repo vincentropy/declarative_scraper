@@ -42,6 +42,12 @@ class TestProcessors(unittest.TestCase):
     def test_index_with_int(self) -> None:
         self.assertEqual(apply_processor(ProcessorName.INDEX, [10, 20, 30], [1]), 20)
 
+    def test_index_out_of_range_high(self) -> None:
+        self.assertIsNone(apply_processor(ProcessorName.INDEX, [10, 20, 30], [5]))
+
+    def test_index_out_of_range_low(self) -> None:
+        self.assertIsNone(apply_processor(ProcessorName.INDEX, [10, 20, 30], [-1]))
+
     def test_replace(self) -> None:
         self.assertEqual(apply_processor(ProcessorName.REPLACE, "hello world", ["world", "Python"]), "hello Python")
 
