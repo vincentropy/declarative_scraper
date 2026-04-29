@@ -39,40 +39,52 @@ def _compare_values(
     path: str,
     errors: list[str],
     target_field_path: str | None = None,
-) -> None:
+) -> int:
     """Recursively compare an actual parsed value against an expected value."""
+    num_items_checked = 0
     if expected is None:
-        if not actual and _path_matches_target(path, target_field_path):
-            return  # Treat None, empty string, empty list, and empty dict as equivalent for convenience
-        if actual and _path_matches_target(path, target_field_path):
+        if not _path_matches_target(path, target_field_path):
+            return 0
+        if not actual:
+            # Treat None, empty string, empty list, and empty dict as equivalent for convenience
+            return 1
+        if actual:
             errors.append(f"{path}: expected None/empty, got {actual!r}")
+            return 1
     elif isinstance(expected, str):
+        if not _path_matches_target(path, target_field_path):
+            return 0
         if expected == "" and (actual is None or actual == ""):
-            return  # Treat empty string and None as equivalent for convenience
-        if actual != expected and _path_matches_target(path, target_field_path):
+            return 1  # Treat empty string and None as equivalent for convenience
+        if actual != expected:
             errors.append(f"{path}: expected {expected!r}, got {actual!r}")
+        return 1
     elif isinstance(expected, dict):
         if not isinstance(actual, dict):
             if _path_matches_target(path, target_field_path):
                 errors.append(f"{path}: expected dict for target field, got {type(actual).__name__}: {actual!r}")
-            return
+                return 1
+            return 0
         for key, exp_val in expected.items():
             actual_val = actual.get(key)
-            _compare_values(actual_val, exp_val, f"{path}.{key}", errors, target_field_path)
+            num_items_checked += _compare_values(actual_val, exp_val, f"{path}.{key}", errors, target_field_path)
     elif isinstance(expected, list):
         exp_list = cast(list[DataValue], expected)
         if not isinstance(actual, list):
             if _path_matches_target(path, target_field_path):
                 errors.append(f"{path}: expected list, got {type(actual).__name__}: {actual!r}")
-            return
+                return 1
+            return 0
         if len(actual) != len(expected):
             if _path_matches_target(path, target_field_path):
                 errors.append(f"{path}: expected {len(expected)} items, got {len(actual)}")
-            return
+            return 1
         for i, (act_item, exp_item) in enumerate(zip(actual, exp_list)):
-            _compare_values(act_item, exp_item, f"{path}[{i}]", errors, target_field_path)
+            num_items_checked += _compare_values(act_item, exp_item, f"{path}[{i}]", errors, target_field_path)
     elif actual != expected and (not target_field_path or _path_matches_target(path, target_field_path)):
         errors.append(f"{path}: expected {expected!r}, got {actual!r}")
+        return 1
+    return num_items_checked
 
 
 def validate_spec_against_expected(
@@ -115,11 +127,12 @@ def validate_items_against_expected(
     errors: list[str] = []
 
     actual = items if items else {}
+    num_items_checked = 0
     for key, exp_val in expected.items():
         actual_val = actual.get(key)
-        _compare_values(actual_val, exp_val, key, errors, field_path)
+        num_items_checked += _compare_values(actual_val, exp_val, key, errors, field_path)
 
-    return FileValidationResult(file_name="", item_count=len(items), errors=errors)
+    return FileValidationResult(file_name="", item_count=num_items_checked, errors=errors)
 
 
 def validate_files(

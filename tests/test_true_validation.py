@@ -55,6 +55,48 @@ class TestCompareValues:
         _compare_values("wrong", "right", "target_field", errors, target_field_path="target_field")
         assert errors
 
+    def test_returns_one_for_scalar_value(self) -> None:
+        errors: list[str] = []
+        count = _compare_values("hello", "hello", "field", errors)
+        assert count == 1
+
+    def test_returns_one_for_none_expected(self) -> None:
+        errors: list[str] = []
+        count = _compare_values(None, None, "field", errors)
+        assert count == 1
+
+    def test_returns_one_for_mismatched_scalar(self) -> None:
+        errors: list[str] = []
+        count = _compare_values("actual", "expected", "field", errors)
+        assert count == 1
+
+    def test_returns_num_keys_for_dict(self) -> None:
+        errors: list[str] = []
+        count = _compare_values({"a": "1", "b": "2"}, {"a": "1", "b": "2"}, "root", errors)
+        assert count == 2
+
+    def test_returns_correct_count_for_list_of_dicts(self) -> None:
+        errors: list[str] = []
+        count = _compare_values(
+            [{"name": "a"}, {"name": "b"}, {"name": "b"}],
+            [{"name": "a"}, {"name": "b"}, {"name": "b"}],
+            "",
+            errors,
+        )
+        assert count == 3
+
+    def test_returns_correct_count_for_list_of_dicts_with_target_field(self) -> None:
+        errors: list[str] = []
+        count = _compare_values(
+            {"items": [{"name": "a", "height": 10}, {"name": "b", "height": 20}]},
+            {"items": [{"name": "c", "height": 10}, {"name": "b", "height": 20}]},
+            "root",
+            errors,
+            "root.items.name",
+        )
+        assert len(errors) == 1
+        assert count == 2
+
 
 class TestValidateSpecAgainstData:
     def _simple_spec(self) -> ParseSpec:
@@ -136,7 +178,7 @@ class TestValidateSpecAgainstDataNestedXpath:
         )
 
         assert result.passed
-        assert result.item_count == 1  # top-level dict counts as 1 item
+        assert result.item_count == 4
 
     def test_passes_when_expected_nested_values_match(self) -> None:
         expected = FileExpectedItems(
@@ -204,6 +246,7 @@ class TestValidateSpecAgainstDataNestedXpath:
             self._nested_spec(), self.NESTED_HTML, expected=expected.items, field_path="items.name"
         )
         assert not result.passed
+        assert result.item_count == 2
 
     def test_raises_for_invalid_nested_field_path(self) -> None:
         with pytest.raises(ValueError, match="does not exist"):
@@ -255,6 +298,7 @@ class TestValidateSpecAgainstDataNestedXpath:
         # First item's name matches → no errors about items[0].name
         # Second item's name mismatch must be suppressed (outside the focused index)
         assert result.passed
+        assert result.item_count == 1
 
 
 class TestValidateSpecAgainstDataDoublyNested:
@@ -353,6 +397,7 @@ class TestValidateSpecAgainstDataDoublyNested:
             self._spec(), self.HTML, expected=expected.items, field_path="items.meta"
         )
         assert not result.passed
+        assert result.item_count == 4
 
     def test_doubly_nested_items_reports_mismatch_len_with_target_field_path(self) -> None:
         """A mismatch inside the doubly-nested object is detected and reported."""
@@ -369,6 +414,7 @@ class TestValidateSpecAgainstDataDoublyNested:
             self._spec(), self.HTML_SINGLE_ITEM, expected=expected.items, field_path="items.meta"
         )
         assert not result.passed
+        assert result.item_count == 1 # Only the first item's meta is present in the actual results.
 
 
 class TestValidateExpectedValues:
