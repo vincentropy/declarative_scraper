@@ -33,6 +33,9 @@ class TestProcessors(unittest.TestCase):
     def test_regex(self) -> None:
         self.assertEqual(apply_processor(ProcessorName.REGEX, "price: 42$", [r"\d+"]), "42")
 
+    def test_regex_with_group(self) -> None:
+        self.assertEqual(apply_processor(ProcessorName.REGEX, "price: 42$", [r"price: (\d+)"]), "42")
+
     def test_split(self) -> None:
         self.assertEqual(apply_processor(ProcessorName.SPLIT, "a,b,c", [","]), ["a", "b", "c"])
 

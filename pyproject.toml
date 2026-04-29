@@ -1,6 +1,6 @@
 [project]
 name = "py-decs"
-version = "0.5.13"
+version = "0.5.14"
 description = "A declarative html scraper for python"
 authors = [
     { name = "Vincent Lonij", email = "29819815+vincentropy@users.noreply.github.com" },

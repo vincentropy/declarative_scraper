@@ -21,9 +21,15 @@ class ProcessorName(Enum):
 
 
 def regex_extract(value: str, pattern: str) -> str:
-    """Extract the first regex match from value. Returns empty string if no match."""
+    """Extract the first regex match from value. Returns empty string if no match.
+
+    If the pattern contains capturing groups, returns the first captured group.
+    Otherwise, returns the full match.
+    """
     match = re.search(pattern, value)
-    return match.group(0) if match else ""
+    if not match:
+        return ""
+    return match.group(1) if match.lastindex else match.group(0)
 
 
 def split_string(value: str, separator: str = " ") -> list[str]:
