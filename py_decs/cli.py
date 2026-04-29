@@ -74,7 +74,7 @@ def validate(spec_path: Path, expected_results_path: Path, field_path: str | Non
     for file_result in validation_result.file_results:
         click.echo(f"{file_result.file_name}:")
         if file_result.passed:
-            click.echo("  Passed")
+            click.echo(f"  Passed. Values checked: {file_result.item_count}")
             continue
 
         for error in file_result.errors:
