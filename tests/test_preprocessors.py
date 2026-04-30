@@ -30,6 +30,10 @@ class TestProcessors(unittest.TestCase):
     def test_join_with_separator(self) -> None:
         self.assertEqual(apply_processor(ProcessorName.JOIN, ["a", "b"], [","]), "a,b")
 
+    def test_join_with_string_raises(self) -> None:
+        with self.assertRaises(ValueError):
+            apply_processor(ProcessorName.JOIN, "not a list")  # type: ignore
+
     def test_regex(self) -> None:
         self.assertEqual(apply_processor(ProcessorName.REGEX, "price: 42$", [r"\d+"]), "42")
 

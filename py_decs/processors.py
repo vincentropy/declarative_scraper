@@ -43,13 +43,24 @@ def select_index(value: list[object], idx: str) -> object:
     return value[int_idx] if -len(value) <= int_idx < len(value) else None
 
 
+def join_strings(value: list[str], separator: str = " ") -> str:
+    """Join a list of strings with the given separator."""
+    if not isinstance(value, list):
+        raise ValueError(
+            f"Expected a list of strings for join processor, got {type(value).__name__}, with value: {value!r}"
+        )
+    if not all(isinstance(v, str) for v in value):
+        raise ValueError(f"Expected all elements to be strings for join processor, got: {value!r}")
+    return separator.join(value)
+
+
 PROCESSOR_REGISTRY: dict[ProcessorName, Callable[..., object]] = {
     ProcessorName.STRIP: lambda value: value.strip() if isinstance(value, str) else "",
     ProcessorName.TO_INT: int,
     ProcessorName.TO_FLOAT: float,
     ProcessorName.LOWERCASE: lambda value: value.lower(),
     ProcessorName.UPPERCASE: lambda value: value.upper(),
-    ProcessorName.JOIN: lambda value, separator=" ": separator.join(value),
+    ProcessorName.JOIN: join_strings,
     ProcessorName.REGEX: regex_extract,
     ProcessorName.SPLIT: split_string,
     ProcessorName.INDEX: select_index,
