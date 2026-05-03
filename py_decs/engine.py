@@ -147,6 +147,6 @@ class ParseEngine:
             return value
         for proc in processors:
             value = apply_processor(proc.name, value, proc.args if proc.args else None)
-        if isinstance(value, (str, float)):
+        if isinstance(value, (str, float)) or value is None:
             return value
         raise ValueError(f"Unsupported value type after processing: {type(value)}")
