@@ -1,6 +1,7 @@
 
 .vscode/
 data
+.env.*
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,data,dotenv,linux,osx,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,data,dotenv,linux,osx,windows

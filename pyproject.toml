@@ -1,7 +1,7 @@
 [project]
 name = "spextract"
-version = "0.6.0"
-description = "A declarative html scraper for python."
+version = "0.6.1"
+description = "A declarative html scraper for python. Define your scraper spec in a yaml or json to extract data from html documents."
 authors = [
     { name = "Vincent Lonij", email = "29819815+vincentropy@users.noreply.github.com" },
 ]
