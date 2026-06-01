@@ -3,8 +3,8 @@ import unittest
 
 from bs4 import BeautifulSoup
 
-from py_decs import FieldSpec, ParseEngine, ParseSpec, ProcessorSpec
-from py_decs.processors import ProcessorName
+from spextract import FieldSpec, ParseEngine, ParseSpec, ProcessorSpec
+from spextract.processors import ProcessorName
 
 
 class TestApplyProcessors(unittest.TestCase):

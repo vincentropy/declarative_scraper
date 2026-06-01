@@ -1,6 +1,6 @@
 import unittest
 
-from py_decs.processors import ProcessorName, apply_processor
+from spextract.processors import ProcessorName, apply_processor
 
 
 class TestProcessors(unittest.TestCase):

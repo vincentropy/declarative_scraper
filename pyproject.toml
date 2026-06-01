@@ -1,7 +1,7 @@
 [project]
-name = "py-decs"
-version = "0.5.16"
-description = "A declarative html scraper for python"
+name = "spextract"
+version = "0.6.0"
+description = "A declarative html scraper for python."
 authors = [
     { name = "Vincent Lonij", email = "29819815+vincentropy@users.noreply.github.com" },
 ]
@@ -28,6 +28,7 @@ pylint = "^4.0.5"
 pytest = "^9.0.3"
 types-lxml = "^2026.2.16"
 pylint-pydantic = "^0.4.1"
+twine = "^6.2.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

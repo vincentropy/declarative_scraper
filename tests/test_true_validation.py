@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from py_decs.models.parser_spec import FieldSpec, FieldType, ParseSpec
-from py_decs.models.validation import FileExpectedItems
-from py_decs.validation.true_validate import _compare_values, validate_files, validate_spec_against_expected
+from spextract.models.parser_spec import FieldSpec, FieldType, ParseSpec
+from spextract.models.validation import FileExpectedItems
+from spextract.validation.true_validate import _compare_values, validate_files, validate_spec_against_expected
 
 
 class TestCompareValues:

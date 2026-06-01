@@ -1,6 +1,6 @@
 import unittest
 
-from py_decs import models
+from spextract import models
 
 
 class TestModels(unittest.TestCase):

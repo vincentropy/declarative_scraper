@@ -1,5 +1,5 @@
-from py_decs.models.parser_spec import FieldSpec, FieldType, ParseSpec
-from py_decs.validation.spec_validate import validate_spec_output
+from spextract.models.parser_spec import FieldSpec, FieldType, ParseSpec
+from spextract.validation.spec_validate import validate_spec_output
 
 
 def test_validate_spec_output_simple():

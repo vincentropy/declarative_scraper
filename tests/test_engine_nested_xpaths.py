@@ -1,5 +1,5 @@
-from py_decs.engine import ParseEngine
-from py_decs.models import ParseSpec, FieldSpec
+from spextract.engine import ParseEngine
+from spextract.models import ParseSpec, FieldSpec
 
 HTML = """
 <html>

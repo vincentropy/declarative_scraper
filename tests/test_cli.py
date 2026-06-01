@@ -3,7 +3,7 @@ from pathlib import Path
 import yaml
 from click.testing import CliRunner
 
-from py_decs.cli import cli
+from spextract.cli import cli
 
 
 SPEC_YAML = """

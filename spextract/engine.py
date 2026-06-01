@@ -6,7 +6,7 @@ from typing import cast
 
 from bs4 import BeautifulSoup, Tag
 
-from py_decs.models.validation import SpecValidationResult
+from spextract.models.validation import SpecValidationResult
 
 from .models import EngineOutput, FieldSpec, ParseSpec, ProcessorSpec, DataValue
 from .processors import apply_processor
