@@ -13,6 +13,19 @@ from .processors import apply_processor
 from .uni_selector import select
 
 
+class SpecParserError(Exception):
+    """Raised when the engine cannot apply the spec to the HTML content."""
+
+    def __init__(self, message: str, path: list[str]) -> None:
+        super().__init__(message)
+        self.path = path
+
+    @property
+    def path_str(self) -> str:
+        """Dot-separated spec path where the error occurred."""
+        return ".".join(self.path) if self.path else "<root>"
+
+
 class ParseEngine:
     """Applies a ParseSpec to HTML content and returns extracted items."""
 
@@ -95,7 +108,10 @@ class ParseEngine:
     def _extract_fields(node: Tag | BeautifulSoup, fields: dict[str, FieldSpec]) -> dict[str, DataValue]:
         result: dict[str, DataValue] = {}
         for name, field_spec in fields.items():
-            field_out = ParseEngine._extract_field(node, field_spec)
+            try:
+                field_out = ParseEngine._extract_field(node, field_spec)
+            except SpecParserError as exc:
+                raise SpecParserError(str(exc), path=[name] + exc.path) from exc
             if field_out is not None:
                 result[name] = field_out
         return result
@@ -149,4 +165,8 @@ class ParseEngine:
             value = apply_processor(proc.name, value, proc.args if proc.args else None)
         if isinstance(value, (str, float)) or value is None:
             return value
-        raise ValueError(f"Unsupported value type after processing: {type(value)}")
+        raise SpecParserError(
+            f"Unsupported value type after processing: {type(value)!s}. "
+            "A processor must return a string, number, or None.",
+            path=[],
+        )

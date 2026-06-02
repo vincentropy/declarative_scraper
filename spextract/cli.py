@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 import yaml
 
-from .engine import ParseEngine
+from .engine import ParseEngine, SpecParserError
 from .models.output import EngineOutput
 from .models.parser_spec import ParseSpec
 from .models.validation import ExpectedResults, FileExpectedItems
@@ -34,7 +34,16 @@ def parse(spec_path: Path, html_path: Path, output_path: Path | None) -> None:
 
     for html_file in html_files:
         html = html_file.read_text(encoding="utf-8")
-        parsed = engine.parse(html)
+        try:
+            parsed = engine.parse(html)
+        except SpecParserError as exc:
+            click.echo(
+                f"Error: Failed to parse '{html_file.name}'. \n"
+                f"spec field '{exc.path_str}' produced an unexpected value.\n"
+                f"Detail: {exc}\n",
+                err=True,
+            )
+            raise SystemExit(1) from exc
         results[html_file.name] = parsed
 
     file_results = ExpectedResults(
