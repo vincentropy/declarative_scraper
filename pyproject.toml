@@ -16,6 +16,10 @@ dependencies = [
     "click (>=8.3.2,<9.0.0)",
 ]
 
+[project.urls]
+GitHub = "https://github.com/vincentropy/declarative_scraper"
+issues = "https://github.com/vincentropy/declarative_scraper/issues"
+
 [project.scripts]
 spextract = "spextract.cli:cli"
 
