@@ -1,22 +1,38 @@
-name: example_spec_name
-description: Example spec for testing.
+name: example_spec
+description: An example spec that extracts a list of cities with name, country, and population.
 version: 1
 fields:
-  title:
-    selector: "h1"
+  page_title:
+    selector: "//h1/text()"
     type: text
     required: true
     processors:
       - strip
-      - regex: ["Example (.*)"]
-  links:
-    selector: "a"
-    type: link
+  cities:
+    selector: "//div[@class='city']"
+    type: text
     multiple: true
     fields:
-      text:
-        selector: ".link-text"
+      name:
+        selector: ".//span[@class='city-name']//text()"
         type: text
+        required: true
+        processors:
+          - strip
       url:
-        selector: "@href"
+        selector: ".//a[@class='city-link']/@href"
         type: link
+        required: true
+      country:
+        selector: ".//span[@class='city-country']//text()"
+        type: text
+        required: true
+        processors:
+          - strip
+      population:
+        selector: ".//span[@class='city-population']//text()"
+        type: text
+        required: true
+        processors:
+          - strip
+          - regex: ["pop: (\\d+)"]
