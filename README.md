@@ -9,8 +9,8 @@ This enables sharing of scraping logic across projects and teams without the ris
 The package includes a Click-based CLI with two commands:
 
 ```bash
-decs parse spec.yaml <path to html file or directory>
-decs validate spec.yaml expected-results.yaml
+spextract parse spec.yaml <path to html file or directory>
+spextract validate spec.yaml expected-results.yaml
 ```
 
 `parse` emits YAML in the same expected-results format used by `validate`, so you can capture known-good output and re-run validation later.
@@ -22,37 +22,37 @@ decs validate spec.yaml expected-results.yaml
 You can write a configuration file with the provided ParserSpec class.
 
 ```python
-import py_decs
+import spextract
 
-spec = py_decs.ParserSpec(
+spec = spextract.ParserSpec(
     name="example_parser",
     description="An example parser for demonstration purposes.",
     fields=[
-        py_decs.FieldSpec(
+        spextract.FieldSpec(
             name="title",
             selector="h1.title::text",
-            type=py_decs.FieldType.TEXT,
+            type=spextract.FieldType.TEXT,
         ),
-        py_decs.FieldSpec(
+        spextract.FieldSpec(
             name="links",
             selector="a.link::attr(href)",
-            type=py_decs.FieldType.LINK,
+            type=spextract.FieldType.LINK,
             multiple=True,
-        )
-        py_decs.FieldSpec(
+        ),
+        spextract.FieldSpec(
             name="author",
             selector="div.author",
-            type=py_decs.FieldType.OBJECT,
+            type=spextract.FieldType.OBJECT,
             fields=[
-                py_decs.FieldSpec(
+                spextract.FieldSpec(
                     name="name",
                     selector="span.name::text",
-                    type=py_decs.FieldType.TEXT,
+                    type=spextract.FieldType.TEXT,
                 ),
-                py_decs.FieldSpec(
+                spextract.FieldSpec(
                     name="profile_url",
                     selector="a.profile::attr(href)",
-                    type=py_decs.FieldType.LINK,
+                    type=spextract.FieldType.LINK,
                 ),
             ]
         ),

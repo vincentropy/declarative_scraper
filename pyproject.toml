@@ -1,13 +1,13 @@
 [project]
 name = "spextract"
-version = "0.6.1"
+dynamic = ["version"]
 description = "A declarative html scraper for python. Define your scraper spec in a yaml or json to extract data from html documents."
 authors = [
     { name = "Vincent Lonij", email = "29819815+vincentropy@users.noreply.github.com" },
 ]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<4.0.0"
 dependencies = [
     "beautifulsoup4 (>=4.14.3,<5.0.0)",
     "pydantic (>=2.12.5,<3.0.0)",
@@ -17,9 +17,10 @@ dependencies = [
 ]
 
 [project.scripts]
-decs = "py_decs.cli:cli"
+spextract = "spextract.cli:cli"
 
 [tool.poetry]
+version = "0.0.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.20.0"
@@ -29,10 +30,20 @@ pytest = "^9.0.3"
 types-lxml = "^2026.2.16"
 pylint-pydantic = "^0.4.1"
 twine = "^6.2.0"
+poetry-dynamic-versioning = "^1.10.0"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "pep440"
+bump = true
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = [
+    "poetry-core>=2.0.0,<3.0.0",
+    "poetry-dynamic-versioning>=1.0.0,<2.0.0",
+]
+build-backend = "poetry-dynamic-versioning.backend"
 
 [tool.pylint]
 load-plugins = ["pylint_pydantic"]
