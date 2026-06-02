@@ -35,8 +35,11 @@ jobs:
       - name: Type check
         run: poetry run mypy .
 
-      - name: Tests
+      - name: Run tests
         run: poetry run pytest tests
+
+      - name: Check build
+        run: poetry build
 
   publish:
     name: Publish to PyPI
